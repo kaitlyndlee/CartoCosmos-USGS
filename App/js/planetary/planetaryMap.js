@@ -96,7 +96,7 @@ class PlanetaryMap {
         computedMaxResolution = 20000;
       }
       if(currentLayer['projection'] == 'north-polar stereographic') {
-        if(count <= 1) {
+        if(count < 0) {
           count++;
           continue;
         }
