@@ -27,7 +27,8 @@ class PlanetaryMap {
     this.mapID = 'map'
     this.target = target;
     this.view = null;
-    this.projection = 'EPSG:4326';  //default for now
+    this.projName = 'north-polar stereographic';
+    this.projection = null;
     this.map = null;
     this.zoom = null;
     this.aAxisRadius = null;
@@ -36,7 +37,6 @@ class PlanetaryMap {
 
     var layers = this.parseWebAtlas();
     this.createMap(layers);
-
   }
  
   /**
@@ -48,32 +48,45 @@ class PlanetaryMap {
    *                          added to the map.
    */
   createMap(layers) {
+
+    this.createProjection();
+
     this.view = new ol.View({
       projection: this.projection,
-      center: ol.proj.fromLonLat([37.41, 8.82]),
-      zoom: this.zoom
+      center: [0, 0],
+      zoom: 3
+    });
+
+    var mousePositionControl = new ol.control.MousePosition({
+      coordinateFormat: ol.coordinate.createStringXY(4),
+      // projection: 'EPSG:4326', // Shouldn't need, uses view projction by default
+      className: 'custom-mouse-position',
+      target: document.getElementById('mouse-position'),
+      undefinedHTML: '&nbsp;'
     });
     
     this.map = new ol.Map({
+      controls: ol.control.defaults().extend([mousePositionControl]),
       target: this.mapID,
       view: this.view
     });
 
     var layerAlreadyVisible = false;
-
+    console.log(layers['base']);
     var baseLayers = layers['base'];
+    var count = 0;
     for(var i = 0; i < baseLayers.length; i++) {
       var currentLayer = baseLayers[i];
 
       // Only set one layer to visible at a time, layer switcher will handle this 
       // in the future
-      var layerVisible = currentLayer['primary'];
-      if(layerAlreadyVisible) {
-        layerVisible = false;
-      }
-      else if(!layerAlreadyVisible && layerVisible == 'true') {
-        layerAlreadyVisible = true;
-      }
+      // var layerVisible = currentLayer['primary'];
+      // if(layerAlreadyVisible) {
+      //   layerVisible = false;
+      // }
+      // else if(!layerAlreadyVisible && layerVisible == 'true') {
+      //   layerAlreadyVisible = true;
+      // }
 
       var computedMaxResolution = (360 / 256);
       // Set to true for now
@@ -82,22 +95,29 @@ class PlanetaryMap {
         wrapCheck = false;
         computedMaxResolution = 20000;
       }
-
-      // Add all layers for now until layer switcher is implemented
-      var baseLayer = new ol.layer.Tile({
-        title: currentLayer['displayname'],
-        type: 'base',
-        visible: layerVisible,
-        maxResolution: computedMaxResolution,
-        source: new ol.source.TileWMS({
-          url: currentLayer['url'] + '?map=' + currentLayer['map'],
-          params:{ 'LAYERS': currentLayer['layer']},
-          serverType: 'mapserver',
-          crossOrigin: 'anonymous',
-          wrapX: wrapCheck 
-        })
-      });
-      this.map.addLayer(baseLayer);
+      if(currentLayer['projection'] == 'north-polar stereographic') {
+        if(count <= 1) {
+          count++;
+          continue;
+        }
+        // Add all layers for now until layer switcher is implemented
+        var baseLayer = new ol.layer.Tile({
+          title: currentLayer['displayname'],
+          type: 'base',
+          visible: 'true',
+          maxResolution: computedMaxResolution,
+          source: new ol.source.TileWMS({
+            url: currentLayer['url'],
+            params:{ 'LAYERS': currentLayer['layer'], 'MAP': currentLayer['map']},
+            serverType: 'mapserver',
+            crossOrigin: 'anonymous',
+            wrapX: wrapCheck 
+          })
+        });
+        this.map.addLayer(baseLayer);
+        console.log(currentLayer);
+        break;
+      }
     }
 
     var overlays = layers['overlays'];
@@ -156,7 +176,7 @@ class PlanetaryMap {
           })
         })
       });
-      this.map.addOverlay(overlay);
+      this.map.addOverlay(wfs);
     }       
   }
 
@@ -180,11 +200,10 @@ class PlanetaryMap {
     for(var i = 0; i < targets.length; i++) {
       var currentTarget = targets[i];
 
-      this.aAxisRadius = currentTarget['aaxisradius'];
-      this.bAxisRadius = currentTarget['baxisradius'];
-      this.cAxisRadius = currentTarget['caxisradius'];
-
       if (currentTarget['name'].toLowerCase() == this.target) {
+        this.aAxisRadius = currentTarget['aaxisradius'];
+        this.bAxisRadius = currentTarget['baxisradius'];
+        this.cAxisRadius = currentTarget['caxisradius'];
 
         var jsonLayers = currentTarget['webmap'];
         for(var j = 0; j < jsonLayers.length; j++) {
@@ -206,5 +225,33 @@ class PlanetaryMap {
       }  
     }
     return layers;
+  }
+
+  createProjection() {
+    var targets = projectionDefs['targets'];
+
+    for(var i = 0; i < targets.length; i++) {
+
+      var currentTarget = targets[i];
+      if(currentTarget['name'].toLowerCase() == this.target.toLowerCase()) {
+        var projections = currentTarget['projections'];
+
+        for(var j = 0; j < projections.length; j++) {
+          var currentProj = projections[j];
+
+          if(currentProj['name'].toLowerCase() == this.projName.toLowerCase()) {
+            console.log(currentProj);
+            proj4.defs(currentProj['code'], currentProj['string']);
+            ol.proj.proj4.register(proj4);
+
+            this.projection = new ol.proj.Projection({
+              code: currentProj['code'],
+              extent: [-2357032, -2357032, 2357032, 2357032]
+            });
+            return;
+          }
+        }
+      }
+    }
   }
 }
