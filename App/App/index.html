@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"></meta>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.0.1/css/ol.css" type="text/css">
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.0.1/build/ol.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4-src.js"></script>
+    <script src="https://astrowebmaps.wr.usgs.gov/webmapatlas/Layers/maps.js"></script>
+    <!--<script src="js/openlayers/v6.0.1-dist/ol.js"></script>-->
+    <script src="js/openlayers/v5.3.0-dist/ol.js"></script>
+    <script src="js/planetary/planetaryFunctions.js"></script>
+    <script src="js/planetary/planetaryMap.js"></script>
+
+    <style>
+      .map {
+        height: 400px;
+        width: 50%;
+        border-style: solid;
+      }
+    </style>
+    <title>OpenLayers V5.3.0 w/ Custom Baselayer</title>
+  </head>
+  <body>
+    <h2>OpenLayers V5.3.0 w/ Custom Baselayer</h2>
+    <h3>Select Target</h3>
+    <select id="target-select"></select>
+    <h3>Select Layer</h3>
+    <select id="layer-select"></select>
+    <script>
+      var layerSelect = document.getElementById("layer-select");
+      var targetSelect = document.getElementById("target-select");
+      var targets = [];
+
+      for(i=0; i<myJSONmaps['targets'].length; i++){
+          currentTarget = myJSONmaps['targets'][i]['name'];
+
+          if(!targets.includes(currentTarget)){
+            targets.push(currentTarget);
+            var currentOption = document.createElement("option");
+            currentOption.value = String(currentTarget);
+            currentOption.text = String(currentTarget);
+            targetSelect.add(currentOption);
+          }
+      }
+    </script>
+
+    <div id="map" class="map"></div>
+
+    <script src="js/planetary/mapInstance.js"></script>
+  </body>
+</html>
