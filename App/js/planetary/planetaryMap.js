@@ -167,6 +167,10 @@ class PlanetaryMap {
   /*
    * Creates OL layers from the parsed JSON matching the requested projection.
    *
+   * Note: We are calling non-base layers overlays, but not
+   * instantiating them as OL overlays but as OL layers because
+   * they need to be treated as layers.
+   *
    * Because we are using the plugin ol-layerswitcher, it
    * requires us to add our layers to LayerGroups and
    * add the LayerGroups to the map.
