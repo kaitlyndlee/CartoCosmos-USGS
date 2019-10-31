@@ -23,7 +23,7 @@ class PlanetaryMap {
    * @param {string} target - The requested target to display the map for, i.e, Mars.
    * @param {string} projection - The requested projection to dispaly the map in.
    */
-  constructor(target, projection) {
+  constructor(target, projection, consoleSettings) {
     this.mapID = 'map'
     this.target = target;
     this.view = null;
@@ -31,9 +31,15 @@ class PlanetaryMap {
     this.projection = null;
     this.map = null;
     this.zoom = null;
+    this.aAxisRadius = 0;
+    this.bAxisRadius = 0;
+    this.cAxisRadius = 0;
+    this.console = null;
+    this.consoleSettings = consoleSettings;
+    this.layers = null;
 
-    var layers = this.parseWebAtlas();
-    this.createMap(layers);
+    this.parseWebAtlas();
+    this.createMap();
   }
  
   /**
@@ -44,18 +50,32 @@ class PlanetaryMap {
    * @param {object} layers - Key-Value pair of base layers and overlays to be
    *                          added to the map.
    */
-  createMap(layers) {
+  createMap() {
 
     this.createProjection();
 
     this.view = new ol.View({
       projection: this.projection,
       center: [0, 0],
-      zoom: 3
+      zoom: 3,
+      minZoom:2,
+      maxZoom:10
     });
 
-    var mapLayers = this.createLayers(layers);
+    var mapLayers = this.createLayers();
 
+
+
+    this.map = new ol.Map({
+      target: this.mapID,
+      view: this.view,
+      layers: mapLayers
+    });
+
+    if (this.console == null) {
+      this.console = new Console(this, this.consoleSettings);
+    }
+  
     // Uses the view projection by default to transform coordinates
     var mousePositionControl = new ol.control.MousePosition({
       coordinateFormat: function(coordinate) {
@@ -70,11 +90,57 @@ class PlanetaryMap {
 
     var layerSwitcher = new ol.control.LayerSwitcher();
 
-    this.map = new ol.Map({
-      target: this.mapID,
-      view: this.view,
-      layers: mapLayers
+
+    var latStyle = new ol.style.Text({
+      font: '12px Calibri,sans-serif',
+      textBaseline: 'bottom',
+      textAlign: 'end',
+      fill: new ol.style.Fill({
+        color: '#eee'
+      })
     });
+
+    var cordLabels = function(lon){
+      return lon.toFixed(2);
+    };
+    var nullLabels = function(lon){
+      return '';
+    };
+
+    if (this.projName == "cylindrical") {
+      //var graticule  = new AstroGraticule({
+      var graticule  = new ol.Graticule({
+        // the style to use for the lines, optional.
+            strokeStyle: new ol.style.Stroke({
+              width: .5,
+              color: "#fff"
+            }),
+            showLabels: true,
+            lonLabelFormatter: cordLabels,
+            latLabelFormatter: cordLabels,
+            latLabelStyle: latStyle,
+            lonLabelStyle: latStyle
+        },
+        this.projName);
+      graticule.setMap(this.map);
+    } 
+    // else {
+    //   var graticule  = new ol.Graticule({
+
+    //           // the style to use for the lines, optional.
+    //         strokeStyle: new ol.style.Stroke({
+    //           width: .5,
+    //           color: "#fff"
+    //         }),
+    //         showLabels: true,
+    //         lonLabelFormatter: nullLabels,
+    //         latLabelFormatter: cordLabels,
+    //         latLabelStyle: latStyle,
+    //         lonLabelStyle: latStyle
+    //   },
+    //   this.projName);
+
+    // }
 
     this.map.addControl(mousePositionControl);
     this.map.addControl(scaleLine);
@@ -122,7 +188,7 @@ class PlanetaryMap {
         }
       }  
     }
-    return layers;
+    this.layers = layers;
   }
 
 
@@ -135,7 +201,7 @@ class PlanetaryMap {
    *  Earth codes, but the rest of the string is specific to the target.
    *  The proj-string allows OL to correctly display the scale line and
    *  mouse position for the requested target and projection without
-   *  having to define transformation.
+   *  having to define a transformation.
    */ 
   createProjection() {
     var targets = projectionDefs['targets'];
@@ -152,9 +218,16 @@ class PlanetaryMap {
           if(currentProj['name'].toLowerCase() == this.projName.toLowerCase()) {
             proj4.defs(currentProj['code'], currentProj['string']);
             ol.proj.proj4.register(proj4);
-
             var projection = ol.proj.get(currentProj['code']);
-            projection.setExtent([-2357032, -2357032, 2357032, 2357032]);
+
+            var extent = [
+              currentProj['extent']['left'],
+              currentProj['extent']['bottom'],
+              currentProj['extent']['right'],
+              currentProj['extent']['top']
+            ];
+
+            projection.setExtent(extent);
             this.projection = currentProj['code'];
             return;
           }
@@ -182,11 +255,11 @@ class PlanetaryMap {
    *                 If there are no overlays, just returns an array with
    *                 the base layer group.
    */
-  createLayers(layers) {
+  createLayers() {
 
     var baseLayers = [];
-      for(var i = 0; i < layers['base'].length; i++) {
-        var currentLayer = layers['base'][i];
+      for(var i = 0; i < this.layers['base'].length; i++) {
+        var currentLayer = this.layers['base'][i];
 
         var computedMaxResolution = (360 / 256);
         // Set to true for now
@@ -217,8 +290,8 @@ class PlanetaryMap {
       }
 
       var overlays = [];
-      for(var i = 0; i < layers['overlays'].length; i++) {
-        var currentLayer = layers['overlays'][i];
+      for(var i = 0; i < this.layers['overlays'].length; i++) {
+        var currentLayer = this.layers['overlays'][i];
 
         var computedMaxResolution = (360 / 256);
         // Set to true for now
@@ -293,6 +366,60 @@ class PlanetaryMap {
         layers: overlays
       });
       return [baseLayerGroup, overlayGroup];
+    }
+  }
+
+  switchProjection(newProjection) {
+    // if ((newProjection == 'north-polar stereographic') && (!this.hasNorthPolar)) {
+    //   alert('North Polar image is NOT AVAILABLE');
+    //   return;
+    // }
+    // if ((newProjection == 'south-polar stereographic') && (!this.hasSouthPolar)) {
+    //   alert('South Polar image is NOT AVAILABLE');
+    //   return;
+    // }
+    this.destroy();
+    this.projName = newProjection;
+    this.createMap();
+
+    // event callback
+    // this.projectionSwitchTrigger();
+  }
+
+  destroy() {
+    // this.controls.deactivateButtons();
+    this.controls = null;  // destroy controls
+    this.map.setTarget(null);
+    this.map = null;
+  }
+
+  mousePosition() {
+
+    var mouseDiv = this.console.mouseLonLatDiv;
+    if (document.getElementById(mouseDiv)) {
+      document.getElementById(mouseDiv).innerHTML = '';
+      var mousePositionControl = new ol.control.MousePosition({
+                    coordinateFormat: function(coordinate) {
+                      var londom = (document.getElementById('astroConsoleLonDomSelect'));
+                      var londir = (document.getElementById('astroConsoleLonDirSelect'));
+                      var lattype = (document.getElementById('astroConsoleLatTypeSelect'));
+                      if (londir && londir.options[londir.selectedIndex].value == 'PositiveWest') {
+                  coordinate = AstroGeometry.transformPosEastPosWest(coordinate);
+                      }
+                      if (londom && londom.options[londom.selectedIndex].value == '180') {
+                  coordinate = AstroGeometry.transform0360To180180(coordinate);
+                      }
+                      if (londom && londom.options[lattype.selectedIndex].value == 'Plantographic') {
+                  coordinate = AstroGeometry.transformOcentricToOgraphic(coordinate);
+                      }
+                      return ol.coordinate.format(coordinate, '{y}, {x}', 2);
+                    },
+                    projection: this.astroMap.currentProj,
+                    className: 'custom-mouse-position',
+                    target: document.getElementById(mouseDiv),
+                    undefinedHTML: '&nbsp;'
+                  });
+      this.map.addControl(mousePositionControl);
     }
   }
 }

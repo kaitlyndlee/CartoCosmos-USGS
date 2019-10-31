@@ -4,6 +4,7 @@
     <meta charset="UTF-8"></meta>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css" type="text/css">
     <link rel="stylesheet" href="js/ol-layerswitcher/dist/ol-layerswitcher.css" type="text/css">
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="js/proj4js/dist/proj4.js"></script>
@@ -11,6 +12,7 @@
     <script src="js/ol-layerswitcher/dist/ol-layerswitcher.js"></script>
     <script src="js/planetary/planetaryFunctions.js"></script>
     <script src="js/planetary/planetaryMap.js"></script>
+    <script src="js/planetary/console/Console.js"></script>
 
     <!-- Constains JSON with target and projection information -->
     <script src="https://astrowebmaps.wr.usgs.gov/webmapatlas/Layers/maps.js"></script>
@@ -33,8 +35,44 @@
   </head>
   <body>
     <h2>Mars Map</h2>
-    <div id="map" class="map"></div>
-    <div id="mouse-position"></div>
+    <!-- <div id="map" class="map"></div>
+    <div id="mouse-position"></div> -->
+
+    <select id="target" onchange="switchTarget();"><option value="Europa">Europa</option><option value="Io">Io</option><option selected="selected" value="Mars">Mars</option><option value="Mercury">Mercury</option><option value="Moon">Moon</option>
+    <select>
+
+    <div id="mapDiv" >
+      <div id="map"></div>
+      <table id="mapBottom">
+         <tr><td rowspan="2"><div class="console">
+          <div id="ConsoleTargetInfo"></div>
+          <div id="ConsoleProjectionButtons"></div>
+          <div id="ConsoleLonLatSelects"></div>
+          <div id="ConsoleKey"></div>
+         </td>
+
+<!--         <td>
+           <div  style="">Max Lat<br/><input type="text" id="astroBBTopLeftLat" size="10" onchange="pilotConstrain.mapSearchAlertOn();astroMap.boundingBoxDrawer.drawFromBounds();" value="" /></div>
+           <div>Min Lon<br/><input type="text" id="astroBBTopLeftLon" size="10" onchange="pilotConstrain.mapSearchAlertOn();astroMap.boundingBoxDrawer.drawFromBounds();" value="" /></div>
+           <div>Max Lon<br/><input type="text" id="astroBBBotRightLon" size="10" onchange="pilotConstrain.mapSearchAlertOn();astroMap.boundingBoxDrawer.drawFromBounds();" value="" /></div>
+           <div>Min Lat<br/><input type="text" id="astroBBBotRightLat" size="10" onchange="pilotConstrain.mapSearchAlertOn();astroMap.boundingBoxDrawer.drawFromBounds();" value="" /></div>
+           <div>WKT <br/><input type="text" name='astroBBWKT' id="astroBBWKT" size="50" onchange="astroMap.boundingBoxDrawer.drawFromForm();" /></div>
+           <div>Split WKT <br/><input type="text" name='astroBBDatelineWKT' id="astroBBDatelineWKT" size="50" onchange="astroMap.boundingBoxDrawer.drawFromForm();" /></div>
+        </td> -->
+
+<!--          <td>
+           <div>
+             <input type="button" name="upcClearBoundingBoxButton" id="pilotBBClear" style="margin: 10px 5px 0px 0px;" id="upcClearBoundingBoxButton" value="Clear Bounding Box" onclick="astroMap.boundingBoxDrawer.removeAndUnstoreAll();" /> 
+            </div>
+           <br/>
+           <div class="upcSmallGray">Feature Finder</div>
+           <div id="astroFeatureFinder"></div>
+           <br/>
+         </td> -->
+         </tr>
+       </table>
+    </div>
+
     <script src="js/planetary/mapInstance.js"></script>
   </body>
 </html>
