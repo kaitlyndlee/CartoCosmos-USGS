@@ -257,31 +257,31 @@ Console.prototype.projButtonsSetup = function() {
   container.appendChild(southPoleImg);
 };
 
-/*
- * Activates the projection button (changes the images) for the passed in projection.
- *
- * Parameter: clickedProjection - the projection string
- * Returns: nothing
- */
-Console.prototype.toggleProjection = function(clickedProjection) {
-  switch(clickedProjection) {
-    case 'cylindrical':
-      document.getElementById(this.cylindricalImgId).src = this.imagePath + "cylindrical-hot.png";
-      document.getElementById(this.northPoleImgId).src = this.imagePath + "north-pole.png";
-      document.getElementById(this.southPoleImgId).src = this.imagePath + "south-pole.png";
-      break;
-    case 'north-polar stereographic':
-      document.getElementById(this.cylindricalImgId).src = this.imagePath + "cylindrical.png";
-      document.getElementById(this.northPoleImgId).src = this.imagePath + "north-pole-hot.png";
-      document.getElementById(this.southPoleImgId).src = this.imagePath + "south-pole.png";
-      break;
-    case 'south-polar stereographic':
-      document.getElementById(this.cylindricalImgId).src = this.imagePath + "cylindrical.png";
-      document.getElementById(this.northPoleImgId).src = this.imagePath + "north-pole.png";
-      document.getElementById(this.southPoleImgId).src = this.imagePath + "south-pole-hot.png";
-      break;
-  }
-};
+// /*
+//  * Activates the projection button (changes the images) for the passed in projection.
+//  *
+//  * Parameter: clickedProjection - the projection string
+//  * Returns: nothing
+//  */
+// Console.prototype.toggleProjection = function(clickedProjection) {
+//   switch(clickedProjection) {
+//     case 'cylindrical':
+//       document.getElementById(this.cylindricalImgId).src = this.imagePath + "cylindrical-hot.png";
+//       document.getElementById(this.northPoleImgId).src = this.imagePath + "north-pole.png";
+//       document.getElementById(this.southPoleImgId).src = this.imagePath + "south-pole.png";
+//       break;
+//     case 'north-polar stereographic':
+//       document.getElementById(this.cylindricalImgId).src = this.imagePath + "cylindrical.png";
+//       document.getElementById(this.northPoleImgId).src = this.imagePath + "north-pole-hot.png";
+//       document.getElementById(this.southPoleImgId).src = this.imagePath + "south-pole.png";
+//       break;
+//     case 'south-polar stereographic':
+//       document.getElementById(this.cylindricalImgId).src = this.imagePath + "cylindrical.png";
+//       document.getElementById(this.northPoleImgId).src = this.imagePath + "north-pole.png";
+//       document.getElementById(this.southPoleImgId).src = this.imagePath + "south-pole-hot.png";
+//       break;
+//   }
+// };
 
 /*
  * Creates the lon/lat dropdown boxes.
@@ -378,59 +378,59 @@ Console.prototype.lonLatSelectsSetup = function(lonDir, lonDom) {
   container.appendChild(latTypeSelectDiv);
 };
 
-/*
- * Adds a key to the console's legend.
- *
- * Parameters: name  - the key's label
- *             color - the color of the key
- * Returns: nothing
- */
-Console.prototype.addKey = function(name, color) {
-  this.key.push(name);
-  var currentColor = (color == null) ? this.keyColors[this.key.length -1] : color;
+// /*
+//  * Adds a key to the console's legend.
+//  *
+//  * Parameters: name  - the key's label
+//  *             color - the color of the key
+//  * Returns: nothing
+//  */
+// Console.prototype.addKey = function(name, color) {
+//   this.key.push(name);
+//   var currentColor = (color == null) ? this.keyColors[this.key.length -1] : color;
 
-  // container div
-  var keyDiv = null;
-  var itemsPerDiv = 5;
-  if ((this.key.length == 1) || ((this.key.length % itemsPerDiv) == 0)) {
-    keyDiv = document.createElement("div");
-    keyDiv.setAttribute('id', this.keyDiv + "" + Math.floor(this.key.length/itemsPerDiv));
-    keyDiv.className = 'ConsoleKeyDiv';
-    document.getElementById(this.keyDiv).appendChild(keyDiv);
-  } else {
-    keyDiv = document.getElementById(this.keyDiv + "" + Math.floor(this.key.length/itemsPerDiv));
-  }
+//   // container div
+//   var keyDiv = null;
+//   var itemsPerDiv = 5;
+//   if ((this.key.length == 1) || ((this.key.length % itemsPerDiv) == 0)) {
+//     keyDiv = document.createElement("div");
+//     keyDiv.setAttribute('id', this.keyDiv + "" + Math.floor(this.key.length/itemsPerDiv));
+//     keyDiv.className = 'ConsoleKeyDiv';
+//     document.getElementById(this.keyDiv).appendChild(keyDiv);
+//   } else {
+//     keyDiv = document.getElementById(this.keyDiv + "" + Math.floor(this.key.length/itemsPerDiv));
+//   }
 
-  var keyBullet = document.createElement("img");
-  keyBullet.setAttribute('alt', name);
-  keyBullet.setAttribute('title',name);
-  keyBullet.setAttribute('src', this.imagePath + "glowBox_" + currentColor + '.png');
-  keyBullet.className ='upcRenderBullet';
-  keyDiv.appendChild(keyBullet);
-  var keyTitle = document.createElement("span");
-  keyTitle.className ='ConsoleKeyTitle';
-  keyTitle.innerHTML = ' ' + name + '<br/>';
-  keyDiv.appendChild(keyTitle);
-};
+//   var keyBullet = document.createElement("img");
+//   keyBullet.setAttribute('alt', name);
+//   keyBullet.setAttribute('title',name);
+//   keyBullet.setAttribute('src', this.imagePath + "glowBox_" + currentColor + '.png');
+//   keyBullet.className ='upcRenderBullet';
+//   keyDiv.appendChild(keyBullet);
+//   var keyTitle = document.createElement("span");
+//   keyTitle.className ='ConsoleKeyTitle';
+//   keyTitle.innerHTML = ' ' + name + '<br/>';
+//   keyDiv.appendChild(keyTitle);
+// };
 
-/*
- * Get the color of the specified key.
- *
- * Parameter: name - the name of the key
- * Returns: the color of the key
- */
-Console.prototype.getKeyColor = function(name) {
-  return (this.keyColors[this.key.indexOf(name)]);
-};
+// /*
+//  * Get the color of the specified key.
+//  *
+//  * Parameter: name - the name of the key
+//  * Returns: the color of the key
+//  */
+// Console.prototype.getKeyColor = function(name) {
+//   return (this.keyColors[this.key.indexOf(name)]);
+// };
 
-/*
- * Removes all of the keys from the console and key array.
- */
-Console.prototype.removeAllKeys = function() {
-  var container = document.getElementById(this.keyDiv);
-  while(container.hasChildNodes()) {
-    container.removeChild(container.lastChild);
-  }
-  this.key = new Array;
-};
+
+//  * Removes all of the keys from the console and key array.
+ 
+// Console.prototype.removeAllKeys = function() {
+//   var container = document.getElementById(this.keyDiv);
+//   while(container.hasChildNodes()) {
+//     container.removeChild(container.lastChild);
+//   }
+//   this.key = new Array;
+// };
 

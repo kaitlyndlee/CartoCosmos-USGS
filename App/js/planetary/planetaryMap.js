@@ -90,59 +90,8 @@ class PlanetaryMap {
 
     var layerSwitcher = new ol.control.LayerSwitcher();
 
-
-    var latStyle = new ol.style.Text({
-      font: '12px Calibri,sans-serif',
-      textBaseline: 'bottom',
-      textAlign: 'end',
-      fill: new ol.style.Fill({
-        color: '#eee'
-      })
-    });
-
-    var cordLabels = function(lon){
-      return lon.toFixed(2);
-    };
-    var nullLabels = function(lon){
-      return '';
-    };
-
-    if (this.projName == "cylindrical") {
-      //var graticule  = new AstroGraticule({
-      var graticule  = new ol.Graticule({
-        // the style to use for the lines, optional.
-            strokeStyle: new ol.style.Stroke({
-              width: .5,
-              color: "#fff"
-            }),
-            showLabels: true,
-            lonLabelFormatter: cordLabels,
-            latLabelFormatter: cordLabels,
-            latLabelStyle: latStyle,
-            lonLabelStyle: latStyle
-        },
-        this.projName);
-      graticule.setMap(this.map);
-    } 
-    // else {
-    //   var graticule  = new ol.Graticule({
-
-    //           // the style to use for the lines, optional.
-    //         strokeStyle: new ol.style.Stroke({
-    //           width: .5,
-    //           color: "#fff"
-    //         }),
-    //         showLabels: true,
-    //         lonLabelFormatter: nullLabels,
-    //         latLabelFormatter: cordLabels,
-    //         latLabelStyle: latStyle,
-    //         lonLabelStyle: latStyle
-    //   },
-    //   this.projName);
-
-    // }
-
-    this.map.addControl(mousePositionControl);
+    // this.map.addControl(mousePositionControl);
+    this.mousePosition();
     this.map.addControl(scaleLine);
     this.map.addControl(layerSwitcher);  
   }
@@ -369,6 +318,7 @@ class PlanetaryMap {
     }
   }
 
+
   switchProjection(newProjection) {
     // if ((newProjection == 'north-polar stereographic') && (!this.hasNorthPolar)) {
     //   alert('North Polar image is NOT AVAILABLE');
@@ -386,12 +336,14 @@ class PlanetaryMap {
     // this.projectionSwitchTrigger();
   }
 
+
   destroy() {
     // this.controls.deactivateButtons();
     this.controls = null;  // destroy controls
     this.map.setTarget(null);
     this.map = null;
   }
+
 
   mousePosition() {
 
@@ -414,7 +366,7 @@ class PlanetaryMap {
                       }
                       return ol.coordinate.format(coordinate, '{y}, {x}', 2);
                     },
-                    projection: this.astroMap.currentProj,
+                    projection: this.map.currentProj,
                     className: 'custom-mouse-position',
                     target: document.getElementById(mouseDiv),
                     undefinedHTML: '&nbsp;'
