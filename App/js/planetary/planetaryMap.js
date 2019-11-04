@@ -23,7 +23,7 @@ class PlanetaryMap {
    * @param {string} target - The requested target to display the map for, i.e, Mars.
    * @param {string} projection - The requested projection to dispaly the map in.
    */
-  constructor(target, projection, consoleSettings) {
+  constructor(target, projection) {
     this.mapID = 'map'
     this.target = target;
     this.view = null;
@@ -34,12 +34,11 @@ class PlanetaryMap {
     this.aAxisRadius = 0;
     this.bAxisRadius = 0;
     this.cAxisRadius = 0;
-    this.console = null;
-    this.consoleSettings = consoleSettings;
     this.layers = null;
 
     this.parseWebAtlas();
     this.createMap();
+    this.addControls();
   }
  
   /**
@@ -64,25 +63,21 @@ class PlanetaryMap {
 
     var mapLayers = this.createLayers();
 
-
-
     this.map = new ol.Map({
       target: this.mapID,
       view: this.view,
       layers: mapLayers
     });
+  }
 
-    if (this.console == null) {
-      this.console = new Console(this, this.consoleSettings);
-    }
-  
+  addControls() {
     // Uses the view projection by default to transform coordinates
     var mousePositionControl = new ol.control.MousePosition({
       coordinateFormat: function(coordinate) {
-        return ol.coordinate.format(coordinate, "Lon: {x}, Lat: {y}", 4);
+        return ol.coordinate.format(coordinate, "{x}, {y}", 4);
     },
-      // className: 'custom-mouse-position',
-      // target: document.getElementById('mouse-position'),
+      className: 'lonLatMouseControl',
+      target: document.getElementById('lonLat'),
       undefinedHTML: '&nbsp;'
     });
 
@@ -90,8 +85,7 @@ class PlanetaryMap {
 
     var layerSwitcher = new ol.control.LayerSwitcher();
 
-    // this.map.addControl(mousePositionControl);
-    this.mousePosition();
+    this.map.addControl(mousePositionControl);
     this.map.addControl(scaleLine);
     this.map.addControl(layerSwitcher);  
   }
@@ -329,8 +323,9 @@ class PlanetaryMap {
     //   return;
     // }
     this.destroy();
-    this.projName = newProjection;
+    this.projName = newProjection.value.toLowerCase();
     this.createMap();
+    this.addControls();
 
     // event callback
     // this.projectionSwitchTrigger();
@@ -338,40 +333,38 @@ class PlanetaryMap {
 
 
   destroy() {
-    // this.controls.deactivateButtons();
-    this.controls = null;  // destroy controls
     this.map.setTarget(null);
     this.map = null;
   }
 
 
-  mousePosition() {
+  // mousePosition() {
 
-    var mouseDiv = this.console.mouseLonLatDiv;
-    if (document.getElementById(mouseDiv)) {
-      document.getElementById(mouseDiv).innerHTML = '';
-      var mousePositionControl = new ol.control.MousePosition({
-                    coordinateFormat: function(coordinate) {
-                      var londom = (document.getElementById('astroConsoleLonDomSelect'));
-                      var londir = (document.getElementById('astroConsoleLonDirSelect'));
-                      var lattype = (document.getElementById('astroConsoleLatTypeSelect'));
-                      if (londir && londir.options[londir.selectedIndex].value == 'PositiveWest') {
-                  coordinate = AstroGeometry.transformPosEastPosWest(coordinate);
-                      }
-                      if (londom && londom.options[londom.selectedIndex].value == '180') {
-                  coordinate = AstroGeometry.transform0360To180180(coordinate);
-                      }
-                      if (londom && londom.options[lattype.selectedIndex].value == 'Plantographic') {
-                  coordinate = AstroGeometry.transformOcentricToOgraphic(coordinate);
-                      }
-                      return ol.coordinate.format(coordinate, '{y}, {x}', 2);
-                    },
-                    projection: this.map.currentProj,
-                    className: 'custom-mouse-position',
-                    target: document.getElementById(mouseDiv),
-                    undefinedHTML: '&nbsp;'
-                  });
-      this.map.addControl(mousePositionControl);
-    }
-  }
+  //   var mouseDiv = this.console.mouseLonLatDiv;
+  //   if (document.getElementById(mouseDiv)) {
+  //     document.getElementById(mouseDiv).innerHTML = '';
+  //     var mousePositionControl = new ol.control.MousePosition({
+  //                   coordinateFormat: function(coordinate) {
+  //                     var londom = (document.getElementById('astroConsoleLonDomSelect'));
+  //                     var londir = (document.getElementById('astroConsoleLonDirSelect'));
+  //                     var lattype = (document.getElementById('astroConsoleLatTypeSelect'));
+  //                     if (londir && londir.options[londir.selectedIndex].value == 'PositiveWest') {
+  //                 coordinate = AstroGeometry.transformPosEastPosWest(coordinate);
+  //                     }
+  //                     if (londom && londom.options[londom.selectedIndex].value == '180') {
+  //                 coordinate = AstroGeometry.transform0360To180180(coordinate);
+  //                     }
+  //                     if (londom && londom.options[lattype.selectedIndex].value == 'Plantographic') {
+  //                 coordinate = AstroGeometry.transformOcentricToOgraphic(coordinate);
+  //                     }
+  //                     return ol.coordinate.format(coordinate, '{y}, {x}', 2);
+  //                   },
+  //                   projection: this.map.currentProj,
+  //                   className: 'custom-mouse-position',
+  //                   target: document.getElementById(mouseDiv),
+  //                   undefinedHTML: '&nbsp;'
+  //                 });
+  //     this.map.addControl(mousePositionControl);
+  //   }
+  // }
 }
