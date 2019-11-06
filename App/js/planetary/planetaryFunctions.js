@@ -64,41 +64,66 @@ projectionDefs = {
  */
 class AstroGeometry {
 
+  // static transform180180To0360(point) {
+  //   var x = point[0];
+  //   if (x < 0) {point[0] = x + 360;}
+  //   return point;
+  // }
+  
   static transform180180To0360(point) {
-    var x = point[0];
-    if (x < 0) {point[0] = x + 360;}
-    return point;
-  }
-
+    var lon = point[0];
+    lon = ((360 + (lon % 360)) % 360);
+    return [lon, point[1]];
+  } 
+  
+  // static transform0360To180180(point) {
+  //   var x = point[0];
+  //   if (x > 180) {point[0] = x - 360;}
+  //   return point;
+  // }
+  
   static transform0360To180180(point) {
-    var x = point[0];
-    if (x > 180) {point[0] = x - 360;}
-    return point;
+    var lon = point[0];
+    if(lon > 180.0) {
+        lon -= 360.0;
+    }
+    return [lon, point[1]];
   }
 
-  static transformDatelineShift(point) {
-    point[0] = point[0] + 360;
-    return point;
-  }
+  // static transformDatelineShift(point) {
+  //   point[0] = point[0] + 360;
+  //   return point;
+  // }
 
-  static transformDatelineUnShift(point) {
-      point[0] = point[0] - 360;
-      return point;
-  }
+  // static transformDatelineUnShift(point) {
+  //     point[0] = point[0] - 360;
+  //     return point;
+  // }
 
-  static transformDanglers(point) {
-    var x = point[0];
-    while (x < 0) {x = x + 360;}
-    while (x > 360) {x = x - 360;}
-    point[0] = x;
-    return point;
-  }
+  // static transformDanglers(point) {
+  //   var x = point[0];
+  //   while (x < 0) {x = x + 360;}
+  //   while (x > 360) {x = x - 360;}
+  //   point[0] = x;
+  //   return point;
+  // }
 
 
   // no reversal - works both ways
+  // static transformPosEastPosWest(point) {
+  //     point[0] = 360 - point[0];
+  //     return point;
+  // }
+  
   static transformPosEastPosWest(point) {
-      point[0] = 360 - point[0];
-      return point;
+    var lon = -1 * point[0];
+
+    // If the lon domain is 0-360, lon may become out of range
+    // (e.g. since 270 * -1 = -270 gets outside the range)
+    if(lon < -180.0) {
+      long += 360.0
+    }
+    return [lon, point[1]];
   }
 
   static transformOcentricToOgraphic(point, aaxisradius, caxisradius) {
