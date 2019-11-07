@@ -155,18 +155,17 @@ var planetaryMap1 = new PlanetaryMap(String(targetSelectValue).toLowerCase(), 'c
 checkProjections(planetaryMap1.layers);
 
 
-function switchTarget(target){
+function switchTarget(target) {
   planetaryMap1.destroy();
   planetaryMap1.target = target;
   planetaryMap1.createMap(planetaryMap1.parseWebAtlas());
-  console.log(planetaryMap1.layers);
   checkProjections(planetaryMap1.layers);
 }
 
 
 targetSelect.onchange = function() {
-  //document.getElementById("projSelect").options[0].selected = true;
   var target = String(targetSelect.options[targetSelect.selectedIndex].text).toLowerCase();
   document.getElementById("projSelect").options[0].selected = true;
+  document.getElementById("projSelect").onchange();
   switchTarget(target);
 }
