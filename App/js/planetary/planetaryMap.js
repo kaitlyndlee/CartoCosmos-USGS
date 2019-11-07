@@ -37,9 +37,10 @@ class PlanetaryMap {
     this.createMap();
   }
  
+
   /**
-   *  Creates the OL Map instance by creating a projection with Proj4js, a 
-   *  map view, base layer and overlay groups, and map controls.
+   * Creates the OL Map instance by creating a projection with Proj4js, a 
+   * map view, base layer and overlay groups, and map controls.
    *  
    * 
    * @param {object} layers - Key-Value pair of base layers and overlays to be
@@ -68,23 +69,29 @@ class PlanetaryMap {
     this.addControls();
   }
 
+
+  /**
+   * Creates the mouse position, scale line, and layer switcher controls
+   * and adds them to the OL map.
+   */
   addControls() {
     // Uses the view projection by default to transform coordinates
     var mousePositionControl = new ol.control.MousePosition({
+      // Every time the mouse is moved, this function is called and the
+      // lat lon are recalculated.
       coordinateFormat: function(coordinate) {
         var lonDirection = document.getElementById("lonDirectionSelect");
         var lonDomain = document.getElementById("lonDomainSelect");
         var latType = document.getElementById("latSelect");
 
-
         if(lonDirection.options[lonDirection.selectedIndex].value == 'Positive West') {
-          coordinate = AstroGeometry.transformPosEastPosWest(coordinate);
+          coordinate = GeometryHelper.transformLonDirection(coordinate);
         }
-        if(lonDomain.options[lonDomain.selectedIndex].value == '180') {
-          coordinate = AstroGeometry.transform0360To180180(coordinate);
+        if(lonDomain.options[lonDomain.selectedIndex].value == '360') {
+          coordinate = GeometryHelper.transform180180To0360(coordinate);
         }
         if (latType.options[latType.selectedIndex].value == 'Planetographic') {
-          coordinate = AstroGeometry.transformOcentricToOgraphic(coordinate);
+          coordinate = GeometryHelper.transformOcentricToOgraphic(coordinate);
         }
         return ol.coordinate.format(coordinate, '{y}, {x}', 2);
       },
@@ -94,7 +101,6 @@ class PlanetaryMap {
     });
 
     var scaleLine = new ol.control.ScaleLine();
-
     var layerSwitcher = new ol.control.LayerSwitcher();
 
     this.map.addControl(mousePositionControl);
@@ -104,8 +110,8 @@ class PlanetaryMap {
 
 
   /**
-   *  Parses WebAtlas JSON that contains data on each layer separated by target.
-   *  Adds JSON layer to correct key-value pair to be used in createMap.
+   * Parses WebAtlas JSON that contains data on each layer separated by target.
+   * Adds JSON layer to correct key-value pair to be used in createMap.
    *  
    * 
    * @return {object} Key-Value pair of base layers and overlays to be
@@ -123,6 +129,8 @@ class PlanetaryMap {
       var currentTarget = targets[i];
 
       if (currentTarget['name'].toLowerCase() == this.target) {
+        GeometryHelper.majorRadius = currentTarget['aaxisradius'];
+        GeometryHelper.minorRadius = currentTarget['caxisradius'];
 
         var jsonLayers = currentTarget['webmap'];
         for(var j = 0; j < jsonLayers.length; j++) {
@@ -325,21 +333,25 @@ class PlanetaryMap {
   }
 
 
+  /*
+   * Switches the projection by creating a new map with the layers corresponding
+   * to the new projection.
+   * 
+   * When the user selects a different option for the projection, this method
+   * gets called from MapInstance. 
+   * 
+   * @param {string} newProjection - New projection to load layers for.
+   */
   switchProjection(newProjection) {
-    // if ((newProjection == 'north-polar stereographic') && (!this.hasNorthPolar)) {
-    //   alert('North Polar image is NOT AVAILABLE');
-    //   return;
-    // }
-    // if ((newProjection == 'south-polar stereographic') && (!this.hasSouthPolar)) {
-    //   alert('South Polar image is NOT AVAILABLE');
-    //   return;
-    // }
     this.destroy();
     this.projName = newProjection.value.toLowerCase();
     this.createMap();
   }
 
 
+  /*
+   * Destroys the OL map.
+   */
   destroy() {
     this.map.setTarget(null);
     this.map = null;

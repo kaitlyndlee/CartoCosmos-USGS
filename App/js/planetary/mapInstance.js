@@ -1,13 +1,28 @@
+/**
+ * @fileOverview Creates the PlanetaryMap Object that contains the OL map and adds
+ * selects and divs to the map for the user to switch the projection, target, lat type,
+ * and lon domain and direction.
+ * 
+ * @author Kaitlyn Lee and Brandon Kindrick
+ *
+ * @history
+ *   2019-09-23 Kaitlyn Lee and Brandon Kindrick - Original Version
+ */
+
 createControls();
-var planetaryMap1 = new PlanetaryMap('mars', 'cylindrical');
+var plantaryMap = new PlanetaryMap('mars', 'cylindrical');
 
 
+/*
+ * Creates divs for projections, lon directons, lon domains, and
+ * lat types.
+ */
 function createControls() {
   var controlsDiv = document.getElementById('controls');
 
   var projectionSelect = document.createElement("select");
   projectionSelect.id = "projSelect";
-  projectionSelect.onchange = function(){switchProjection(projectionSelect);};
+  projectionSelect.onchange = function(){switchProjection(projectionSelect.value);};
   controlsDiv.appendChild(projectionSelect);
 
   var projOptions = ["Cylindrical", "North-polar Stereographic", "South-polar Stereographic"];
@@ -63,7 +78,9 @@ function createControls() {
   createLonLatDiv();
 }
 
-
+/*
+ * Creates div for displaying the current lon lat.
+ */
 function createLonLatDiv() {
   var controlsDiv = document.getElementById('controls');
   var lonLatDiv = document.createElement("div");
@@ -73,7 +90,10 @@ function createLonLatDiv() {
 }
 
 
-function refreshLatLonDiv() {
+/*
+ * Deletes and recreates the lon lat div.
+ */
+function refreshLonLatDiv() {
   var controlsDiv = document.getElementById('controls');
   var lonLatDiv = document.getElementById('lonLat');
   controlsDiv.removeChild(lonLatDiv);
@@ -81,7 +101,13 @@ function refreshLatLonDiv() {
 }
 
 
+/*
+ * Switches the projection the OL map is currently displaying
+ * by refreshing the lon lat div and calling the PlanetaryMap switchProjection
+ * method. We have to refresh the lon lat div because it gets cloned every time
+ * the projection is switched (for some reason).
+ */
 function switchProjection(newProjection) {
-  refreshLatLonDiv();
-  planetaryMap1.switchProjection(newProjection);
+  refreshLonLatDiv();
+  plantaryMap.switchProjection(newProjection);
 }
