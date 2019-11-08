@@ -8,7 +8,7 @@
  */
 
 /*
- * Wrapper around OpenLayers map that parses the WebAtlas JSON, grabs the 
+ * Wrapper around OpenLayers (OL) map that parses the WebAtlas JSON, grabs the 
  * layers that match the target, creates the OpenLayers view and map, and adds
  * the layers from the JSON to the map.
  */
@@ -32,6 +32,8 @@ class PlanetaryMap {
     this.map = null;
     this.zoom = null;
     this.layers = null;
+    this.box = null;
+    this.drawBoxLayers = [];
 
     this.parseWebAtlas();
     this.createMap();
@@ -355,5 +357,37 @@ class PlanetaryMap {
   destroy() {
     this.map.setTarget(null);
     this.map = null;
+  }
+
+
+  draw() {
+    var vectorSource = new ol.source.Vector({
+      wrapX: false
+    });
+    var drawBox = new ol.layer.Vector({
+      source: vectorSource
+    });
+
+    this.drawBoxLayers.push(drawBox);
+
+    this.map.addLayer(drawBox);
+
+    this.box = new ol.interaction.Draw({
+      type: "Circle",
+      source: vectorSource,
+      geometryFunction: ol.interaction.Draw.createBox()
+    });
+    this.map.addInteraction(this.box);
+  }
+
+
+  removeBox() {
+    if(this.drawBoxLayers.length > 0) {
+      for(var i = 0; i < this.drawBoxLayers.length; i++) {
+        this.map.removeLayer(this.drawBoxLayers[i]);
+      }
+      
+      this.map.removeInteraction(this.box);
+    }
   }
 }

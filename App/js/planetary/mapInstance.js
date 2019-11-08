@@ -70,6 +70,18 @@ function createControls() {
     latSelect.appendChild(option);
   }
 
+  var drawBoxDiv = document.createElement("BUTTON");
+  drawBoxDiv.id = "drawBoxDiv";
+  drawBoxDiv.innerHTML = "Draw Box";
+  drawBoxDiv.onclick = function(){plantaryMap.draw();};
+  controlsDiv.appendChild(drawBoxDiv);
+
+  var removeBoxDiv = document.createElement("BUTTON");
+  removeBoxDiv.id = "removeBoxDiv";
+  removeBoxDiv.innerHTML = "Remove Box";
+  removeBoxDiv.onclick = function(){plantaryMap.removeBox();};
+  controlsDiv.appendChild(removeBoxDiv);
+
   var lonLatTitle = document.createElement("div");
   lonLatTitle.className ='lonLatTitle';
   lonLatTitle.innerHTML = 'Lat Lon: &nbsp;';
@@ -77,6 +89,7 @@ function createControls() {
 
   createLonLatDiv();
 }
+
 
 /*
  * Creates div for displaying the current lon lat.
