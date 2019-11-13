@@ -32,7 +32,8 @@ class PlanetaryMap {
     this.map = null;
     this.zoom = null;
     this.layers = null;
-    this.box = null;
+    this.boundingBoxDrawer = new BoundingBoxDrawer(null, null);;
+    this.vectorSource = null;
     this.drawBoxLayers = [];
 
     this.parseWebAtlas();
@@ -67,6 +68,7 @@ class PlanetaryMap {
       view: this.view,
       layers: mapLayers
     });
+    this.boundingBoxDrawer.updateMap(this.map);
 
     this.addControls();
   }
@@ -104,6 +106,17 @@ class PlanetaryMap {
 
     var scaleLine = new ol.control.ScaleLine();
     var layerSwitcher = new ol.control.LayerSwitcher();
+
+    var vectorSource = new ol.source.Vector({
+      wrapX: false
+    });
+    this.boundingBoxDrawer.updateSource(vectorSource);
+
+    var drawBox = new ol.layer.Vector({
+      source: vectorSource
+    });
+    this.drawBoxLayers.push(drawBox);
+    this.map.addLayer(drawBox);
 
     this.map.addControl(mousePositionControl);
     this.map.addControl(scaleLine);
@@ -346,8 +359,9 @@ class PlanetaryMap {
    */
   switchProjection(newProjection) {
     this.destroy();
-    this.projName = newProjection.value.toLowerCase();
+    this.projName = newProjection.toLowerCase();
     this.createMap();
+    this.boundingBoxDrawer.redrawFeature();
   }
 
 
@@ -360,34 +374,39 @@ class PlanetaryMap {
   }
 
 
-  draw() {
-    var vectorSource = new ol.source.Vector({
-      wrapX: false
-    });
-    var drawBox = new ol.layer.Vector({
-      source: vectorSource
-    });
-
-    this.drawBoxLayers.push(drawBox);
-
-    this.map.addLayer(drawBox);
-
-    this.box = new ol.interaction.Draw({
-      type: "Circle",
-      source: vectorSource,
-      geometryFunction: ol.interaction.Draw.createBox()
-    });
-    this.map.addInteraction(this.box);
-  }
+  // drawBoundingBox() {
 
 
-  removeBox() {
+  //   // this.box = new ol.interaction.Draw({
+  //   //   type: "Circle",
+  //   //   source: vectorSource,
+  //   //   geometryFunction: ol.interaction.Draw.createBox()
+  //   // });
+  //   // this.map.addInteraction(this.box);
+
+  //   // var format = new ol.format.WKT();
+  //   // this.box.on('drawend', function(e) {
+  //   //   fara wkt = format.writeFeature(e.feature);
+  //   //   // var wkt = format.writeGeometry(e.feature.getGeometry());
+  //   //   console.log(wkt);
+  //   //   document.getElementById('polygonWKT').value = wkt;
+  //   //   // var feature = format.readFeature(wkt, {
+  //   //   //   dataProjection: 'EPSG:4326',
+  //   //   //   featureProjection: 'EPSG:32661'
+  //   //   // });
+  //   //   // drawBox.getSource().addFeatures(feature);
+  //   // });
+  // }
+
+
+  removeBoundingBox() {
     if(this.drawBoxLayers.length > 0) {
       for(var i = 0; i < this.drawBoxLayers.length; i++) {
         this.map.removeLayer(this.drawBoxLayers[i]);
       }
       
       this.map.removeInteraction(this.box);
+      this.boundingBoxDrawer.removeFeatures();
     }
   }
 }

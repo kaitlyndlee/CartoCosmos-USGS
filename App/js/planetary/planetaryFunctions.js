@@ -200,5 +200,133 @@ class GeometryHelper {
     lat = newY * 180 / Math.PI;
     return [point[0], lat];
   }
+
+  /*
+   * Cleans up the WKT string by removing unnecessary whitespace from beginning and
+   * end of string, as well as any whitespace between text and an opening parenthesis.
+   *
+   * For example, '  MULTIPOINT ((10 10), (45 45))  ' will become 'MULTIPOINT((10 10),(45 45))'.
+   *
+   * Parameter: wkt - the wkt string to be cleaned
+   * Returns: the clean wkt string
+   */
+  static cleanWkt(wkt) {
+    // trim
+    wkt = wkt.replace(/^\s+|\s+$/g, "");
+
+    // remove whitespace between geometry type and paren
+    return wkt.replace(/\s+\(/g, "(");
+  }
+
+  // /*
+  //  * Warps a geometry by adding extra points along the edges. Helps to maintain
+  //  * shape on reprojections. Supported geometry types include POINT, MULTIPOINT,
+  //  * POLYGON, MULTIPOLYGON, LINESTRING, MULTILINESTRING.
+  //  *
+  //  * IMPORTANT: Polygons and MultiPolygons containing holes (interior rings) are not supported.
+  //  *
+  //  * Parameter: wkt - wkt string (EPSG:4326)
+  //  * Returns: warped wkt string
+  //  */
+  // static warpWkt(wkt) {
+  //   // extract the geometry type (prefix)
+  //   var wktPrefix = this.extractGeometryType(wkt);
+
+  //   //console.log('warp wkt ' + wkt);
+
+  //   if ((wktPrefix == "POINT") || (wktPrefix == "MULTIPOINT")) {
+  //     return wkt;
+  //   }
+  //   else if (wktPrefix == "POLYGON") {
+  //     // extract points from wkt (ONLY WORKS FOR SIMPLE POLYGONS WITHOUT HOLES)
+  //     var points = wkt.slice(9, wkt.length - 2).split(',');
+
+  //     if (points.length <= 16) {
+  //       var newPoints = this.saturatePointArray(points);
+  //       // return warped wkt
+  //       return "POLYGON((" + newPoints.join() + "))";
+  //     }
+  //     else {
+  //       // we don't need to warp because there are too many points
+  //       return wkt;
+  //     }
+  //   }
+  //   else if (wktPrefix == "LINESTRING") {
+  //     var points = wkt.slice(11, wkt.length - 1).split(',');
+
+  //     if (points.length <= 16) {
+  //       var newPoints = this.saturatePointArray(points);
+  //       return "LINESTRING(" + newPoints.join() + ")";
+  //     }
+  //     else {
+  //       return wkt;
+  //     }
+  //   }
+  //   else if (wktPrefix == "MULTIPOLYGON") {
+  //     // parse wkt
+  //     var wktParser = new ol.format.WKT();
+  //     var multiGeometry = wktParser.readGeometry(wkt);
+
+  //     // grab individual polygons that comprise this geometry and warp them
+  //     var polys = multiGeometry.getPolygons();
+  //     var polyArray = [];
+
+  //     for (var i = 0, len = polys.length; i < len; i++) {
+  //       var points = polys[i].getCoordinates();
+  //       var pointsF = [];
+  //       points = points[0];
+  //       for (var j = 0, pLen = points.length; j < pLen; j++) {
+  //   pointsF[j] = points[j][0] + ' ' + points[j][1];
+  //       }
+  //       if (points.length <= 16) {
+  //         var newPoints = this.saturatePointArray(pointsF);
+  //         polyArray[i] = "((" + newPoints.join() + "))";
+  //       } else {
+  //         polyArray[i] = "((" + pointsF.join() + "))";
+  //       }
+  //     }
+  //     return "MULTIPOLYGON(" + polyArray.join() + ")";
+  //   }
+  //   else if (wktPrefix == "MULTILINESTRING") {
+  //     var wktParser = new OpenLayers.Format.WKT();
+  //     var multiFeature = wktParser.read(wkt);
+
+  //     var lines = multiFeature.getGeometry().components;
+  //     var lineArray = [];
+  //     for (var i = 0, len = lines.length; i < len; i++) {
+  //       var linesStr = lines[i].toString();
+  //       var points = linesStr.slice(11, linesStr.length - 1).split(',');
+
+  //       if (points.length <= 16) {
+  //         var newPoints = this.saturatePointArray(points);
+  //         lineArray[i] = "(" + newPoints.join() + ")";
+  //       }
+  //       else {
+  //         lineArray[i] = "(" + points.join() + ")";
+  //       }
+  //     }
+  //     return "MULTILINESTRING(" + lineArray.join() + ")";
+  //   }
+  //   else {
+  //     // unsupported geometry type, so just return it
+  //     return wkt;
+  //   }
+  // }
+
+  // /*
+  //  * Extracts the geometry type from the WKT string. For example, if the WKT string is
+  //  * 'POINT(7 10)', 'POINT' will be returned. Assumes the WKT has already been cleaned up
+  //  * (see AstroGeometry.cleanWkt() for more details).
+  //  *
+  //  * Parameter: wkt - the wkt string
+  //  * Returns: the geometry type string, or null if bad WKT
+  //  */
+  // static extractGeometryType(wkt) {
+  //   var prefixEnd = wkt.indexOf("(");
+  //   if (prefixEnd == -1) {
+  //     return null;
+  //   }
+  //   return wkt.substring(0, prefixEnd);
+  // }
 }
 

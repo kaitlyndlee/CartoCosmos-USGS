@@ -12,6 +12,8 @@
     <script src="js/ol-layerswitcher/dist/ol-layerswitcher.js"></script>
     <script src="js/planetary/planetaryFunctions.js"></script>
     <script src="js/planetary/planetaryMap.js"></script>
+    <script src="js/planetary/ShapeDrawer.js"></script>
+    <script src="js/planetary/BoundingBoxDrawer.js"></script>
 
     <!-- Constains JSON with target and projection information -->
     <script src="https://astrowebmaps.wr.usgs.gov/webmapatlas/Layers/maps.js"></script>
@@ -32,6 +34,13 @@
     <select> -->
     <div id="map" class="map"></div>
     <div id="controls"></div>
+    <td>
+       <div>Max Lat<input type="text" id="polygonMaxLat" size="10" value="" /></div>
+       <div>Min Lon<input type="text" id="polygonMinLon" size="10" value="" /></div>
+       <div>Max Lon<input type="text" id="polygonMaxLon" size="10" value="" /></div>
+       <div>Min Lat<input type="text" id="polygonMinLat" size="10" value="" /></div>
+       <div>WKT<input type="text" name='polygonWKT' id="polygonWKT" size="50" /></div>
+     </td>
     <script src="js/planetary/mapInstance.js"></script>
   </body>
 </html>

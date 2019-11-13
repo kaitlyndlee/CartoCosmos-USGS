@@ -70,17 +70,29 @@ function createControls() {
     latSelect.appendChild(option);
   }
 
-  var drawBoxDiv = document.createElement("BUTTON");
+  var drawBoxDiv = document.createElement("button");
   drawBoxDiv.id = "drawBoxDiv";
   drawBoxDiv.innerHTML = "Draw Box";
-  drawBoxDiv.onclick = function(){plantaryMap.draw();};
+  drawBoxDiv.onclick = function(){plantaryMap.boundingBoxDrawer.draw();};
   controlsDiv.appendChild(drawBoxDiv);
 
-  var removeBoxDiv = document.createElement("BUTTON");
+  var removeBoxDiv = document.createElement("button");
   removeBoxDiv.id = "removeBoxDiv";
   removeBoxDiv.innerHTML = "Remove Box";
-  removeBoxDiv.onclick = function(){plantaryMap.removeBox();};
+  removeBoxDiv.onclick = function(){plantaryMap.removeBoundingBox();};
   controlsDiv.appendChild(removeBoxDiv);
+
+  var boundingBoxCoordinates = document.createElement("div");
+  controlsDiv.appendChild(boundingBoxCoordinates);
+
+  // var minLon = document.createElement("div");
+  // minLon.id = "minLonWKT"
+  // minLon.innerHTML = 'Min Lon: ';
+  // boundingBoxCoordinates.appendChild(minLon);
+
+  // var minLonBox = document.createElement("text");
+  // minLonBox.id = "minLonWKTBox"
+  // boundingBoxCoordinates.appendChild(minLonBox);
 
   var lonLatTitle = document.createElement("div");
   lonLatTitle.className ='lonLatTitle';
