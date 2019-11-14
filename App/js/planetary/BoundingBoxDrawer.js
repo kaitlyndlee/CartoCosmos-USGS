@@ -41,13 +41,22 @@ class BoundingBoxDrawer extends ShapeDrawer {
     //   console.log("GOT CALLED");
     //   // this.drawFromControl(wkt);
     // });
+    
+    // Store this context so that it is accessible inside of the
+    // drawstart and drawend events
     var bbox = this;
+
     var format = new ol.format.WKT();
+    boundingBox.on('drawstart', function(e) {
+      bbox.removeFeatures();
+    });
+
     boundingBox.on('drawend', function(e) {
       var wkt = format.writeFeature(e.feature);
       // var wkt = format.writeGeometry(e.feature.getGeometry());
       console.log(wkt);
       bbox.drawFromButton(wkt);
+      bbox.map.removeInteraction(this);
 
       // document.getElementById('polygonWKT').value = wkt;
       // var feature = format.readFeature(wkt, {
@@ -81,6 +90,7 @@ class BoundingBoxDrawer extends ShapeDrawer {
       //   return null;
       // }
       wkt = format.writeGeometry(geometry);
+      document.getElementById('polygonWKT').value = wkt;
 
     }
     return this.saveShape(wkt, "box");
