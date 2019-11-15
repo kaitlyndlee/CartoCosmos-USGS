@@ -8,7 +8,7 @@
  */
 
 /*
- * Wrapper around OpenLayers map that parses the WebAtlas JSON, grabs the
+ * Wrapper around OpenLayers (OL) map that parses the WebAtlas JSON, grabs the
  * layers that match the target, creates the OpenLayers view and map, and adds
  * the layers from the JSON to the map.
  */
@@ -32,15 +32,18 @@ class PlanetaryMap {
     this.map = null;
     this.zoom = null;
     this.layers = null;
+    this.boundingBoxDrawer = new BoundingBoxDrawer(null, null);
+    this.polygonDrawer = new PolygonDrawer(null, null);
+    this.vectorSource = null;
 
     this.parseWebAtlas();
     this.createMap();
   }
 
-  /**  planetaryMap1.map = null;
-  planetaryMap1.target = null;
-   *  Creates the OL Map instance by creating a projection with Proj4js, a
-   *  map view, base layer and overlay groups, and map controls.
+
+  /**
+   * Creates the OL Map instance by creating a projection with Proj4js, a
+   * map view, base layer and overlay groups, and map controls.
    *
    *
    * @param {object} layers - Key-Value pair of base layers and overlays to be
@@ -65,27 +68,35 @@ class PlanetaryMap {
       view: this.view,
       layers: mapLayers
     });
+    this.boundingBoxDrawer.setMap(this.map);
+    this.polygonDrawer.setMap(this.map);
 
     this.addControls();
   }
 
+
+  /**
+   * Creates the mouse position, scale line, and layer switcher controls
+   * and adds them to the OL map.
+   */
   addControls() {
     // Uses the view projection by default to transform coordinates
     var mousePositionControl = new ol.control.MousePosition({
+      // Every time the mouse is moved, this function is called and the
+      // lat lon are recalculated.
       coordinateFormat: function(coordinate) {
         var lonDirection = document.getElementById("lonDirectionSelect");
         var lonDomain = document.getElementById("lonDomainSelect");
         var latType = document.getElementById("latSelect");
 
-
         if(lonDirection.options[lonDirection.selectedIndex].value == 'Positive West') {
-          coordinate = AstroGeometry.transformPosEastPosWest(coordinate);
+          coordinate = GeometryHelper.transformLonDirection(coordinate);
         }
-        if(lonDomain.options[lonDomain.selectedIndex].value == '180') {
-          coordinate = AstroGeometry.transform0360To180180(coordinate);
+        if(lonDomain.options[lonDomain.selectedIndex].value == '360') {
+          coordinate = GeometryHelper.transform180180To0360(coordinate);
         }
         if (latType.options[latType.selectedIndex].value == 'Planetographic') {
-          coordinate = AstroGeometry.transformOcentricToOgraphic(coordinate);
+          coordinate = GeometryHelper.transformOcentricToOgraphic(coordinate);
         }
         return ol.coordinate.format(coordinate, '{y}, {x}', 2);
       },
@@ -95,8 +106,18 @@ class PlanetaryMap {
     });
 
     var scaleLine = new ol.control.ScaleLine();
-
     var layerSwitcher = new ol.control.LayerSwitcher();
+
+    var vectorSource = new ol.source.Vector({
+      wrapX: false
+    });
+    this.boundingBoxDrawer.setSource(vectorSource);
+    this.polygonDrawer.setSource(vectorSource);
+
+    var drawBox = new ol.layer.Vector({
+      source: vectorSource
+    });
+    this.map.addLayer(drawBox);
 
     this.map.addControl(mousePositionControl);
     this.map.addControl(scaleLine);
@@ -105,9 +126,9 @@ class PlanetaryMap {
 
 
   /**
-   *  Parses WebAtlas JSON that contains data on each layer separated by target.
-   *  Adds JSON layer to correct key-value pair to be used in createMap.
-   *
+   * Parses WebAtlas JSON that contains data on each layer separated by target.
+   * Adds JSON layer to correct key-value pair to be used in createMap.
+   * Also checks each target for a valid North/ South Stereographic Layer.
    *
    * @return {object} Key-Value pair of base layers and overlays to be
    *                          added to the map.
@@ -126,12 +147,14 @@ class PlanetaryMap {
       var currentTarget = targets[i];
 
       if (currentTarget['name'].toLowerCase() == this.target) {
+        GeometryHelper.majorRadius = currentTarget['aaxisradius'];
+        GeometryHelper.minorRadius = currentTarget['caxisradius'];
 
         var jsonLayers = currentTarget['webmap'];
         for(var j = 0; j < jsonLayers.length; j++) {
           var currentLayer = jsonLayers[j];
 
-          if(currentLayer['type'] == 'WMS'/* && currentLayer['displayname'] != "Lat/Lon Grid Lines"*/) {
+          if(currentLayer['type'] == 'WMS') {
             // Base layer check
             if(currentLayer['transparent'] == 'false') {
               layers['base'].push(currentLayer);
@@ -196,6 +219,7 @@ class PlanetaryMap {
             ];
 
             projection.setExtent(extent);
+            // projection.setWorldExtent([0, 60, 360, 90]);
             this.projection = currentProj['code'];
             return;
           }
@@ -338,23 +362,61 @@ class PlanetaryMap {
   }
 
 
+  /*
+   * Switches the projection by creating a new map with the layers corresponding
+   * to the new projection.
+   *
+   * When the user selects a different option for the projection, this method
+   * gets called from MapInstance.
+   *
+   * @param {string} newProjection - New projection to load layers for.
+   */
   switchProjection(newProjection) {
-    // if ((newProjection == 'north-polar stereographic') && (!this.hasNorthPolar)) {
-    //   alert('North Polar image is NOT AVAILABLE');
-    //   return;
-    // }
-    // if ((newProjection == 'south-polar stereographic') && (!this.hasSouthPolar)) {
-    //   alert('South Polar image is NOT AVAILABLE');
-    //   return;
-    // }
     this.destroy();
-    this.projName = newProjection.value.toLowerCase();
+    this.projName = newProjection.toLowerCase();
     this.createMap();
+    this.boundingBoxDrawer.redrawFeature();
+    this.polygonDrawer.redrawFeature();
   }
 
 
+  /*
+   * Destroys the OL map.
+   */
   destroy() {
     this.map.setTarget(null);
     this.map = null;
+  }
+
+
+  // drawBoundingBox() {
+
+
+  //   // this.box = new ol.interaction.Draw({
+  //   //   type: "Circle",
+  //   //   source: vectorSource,
+  //   //   geometryFunction: ol.interaction.Draw.createBox()
+  //   // });
+  //   // this.map.addInteraction(this.box);
+
+  //   // var format = new ol.format.WKT();
+  //   // this.box.on('drawend', function(e) {
+  //   //   fara wkt = format.writeFeature(e.feature);
+  //   //   // var wkt = format.writeGeometry(e.feature.getGeometry());
+  //   //   console.log(wkt);
+  //   //   document.getElementById('polygonWKT').value = wkt;
+  //   //   // var feature = format.readFeature(wkt, {
+  //   //   //   dataProjection: 'EPSG:4326',
+  //   //   //   featureProjection: 'EPSG:32661'
+  //   //   // });
+  //   //   // drawBox.getSource().addFeatures(feature);
+  //   // });
+  // }
+
+
+  removeBoundingBox() {
+    this.map.removeInteraction(this.box);
+    this.boundingBoxDrawer.removeFeatures();
+    this.polygonDrawer.removeFeatures();
   }
 }
