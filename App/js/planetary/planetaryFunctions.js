@@ -218,115 +218,176 @@ class GeometryHelper {
     return wkt.replace(/\s+\(/g, "(");
   }
 
-  // /*
-  //  * Warps a geometry by adding extra points along the edges. Helps to maintain
-  //  * shape on reprojections. Supported geometry types include POINT, MULTIPOINT,
-  //  * POLYGON, MULTIPOLYGON, LINESTRING, MULTILINESTRING.
-  //  *
-  //  * IMPORTANT: Polygons and MultiPolygons containing holes (interior rings) are not supported.
-  //  *
-  //  * Parameter: wkt - wkt string (EPSG:4326)
-  //  * Returns: warped wkt string
-  //  */
-  // static warpWkt(wkt) {
-  //   // extract the geometry type (prefix)
-  //   var wktPrefix = this.extractGeometryType(wkt);
+  /*
+   * Warps a geometry by adding extra points along the edges. Helps to maintain
+   * shape on reprojections. Supported geometry types include POINT, MULTIPOINT,
+   * POLYGON, MULTIPOLYGON, LINESTRING, MULTILINESTRING.
+   *
+   * IMPORTANT: Polygons and MultiPolygons containing holes (interior rings) are not supported.
+   *
+   * Parameter: wkt - wkt string (EPSG:4326)
+   * Returns: warped wkt string
+   */
+  static warpWkt(wkt) {
+    // extract the geometry type (prefix)
+    var wktPrefix = this.extractGeometryType(wkt);
 
-  //   //console.log('warp wkt ' + wkt);
+    if ((wktPrefix == "POINT") || (wktPrefix == "MULTIPOINT")) {
+      return wkt;
+    }
+    else if (wktPrefix == "POLYGON") {
+      // extract points from wkt (ONLY WORKS FOR SIMPLE POLYGONS WITHOUT HOLES)
+      var points = wkt.slice(9, wkt.length - 2).split(',');
 
-  //   if ((wktPrefix == "POINT") || (wktPrefix == "MULTIPOINT")) {
-  //     return wkt;
-  //   }
-  //   else if (wktPrefix == "POLYGON") {
-  //     // extract points from wkt (ONLY WORKS FOR SIMPLE POLYGONS WITHOUT HOLES)
-  //     var points = wkt.slice(9, wkt.length - 2).split(',');
+      if (points.length <= 16) {
+        var newPoints = this.saturatePointArray(points);
+        // return warped wkt
+        return "POLYGON((" + newPoints.join() + "))";
+      }
+      else {
+        // we don't need to warp because there are too many points
+        return wkt;
+      }
+    }
+    else if (wktPrefix == "LINESTRING") {
+      var points = wkt.slice(11, wkt.length - 1).split(',');
 
-  //     if (points.length <= 16) {
-  //       var newPoints = this.saturatePointArray(points);
-  //       // return warped wkt
-  //       return "POLYGON((" + newPoints.join() + "))";
-  //     }
-  //     else {
-  //       // we don't need to warp because there are too many points
-  //       return wkt;
-  //     }
-  //   }
-  //   else if (wktPrefix == "LINESTRING") {
-  //     var points = wkt.slice(11, wkt.length - 1).split(',');
+      if (points.length <= 16) {
+        var newPoints = this.saturatePointArray(points);
+        return "LINESTRING(" + newPoints.join() + ")";
+      }
+      else {
+        return wkt;
+      }
+    }
+    else if (wktPrefix == "MULTIPOLYGON") {
+      // parse wkt
+      var wktParser = new ol.format.WKT();
+      var multiGeometry = wktParser.readGeometry(wkt);
 
-  //     if (points.length <= 16) {
-  //       var newPoints = this.saturatePointArray(points);
-  //       return "LINESTRING(" + newPoints.join() + ")";
-  //     }
-  //     else {
-  //       return wkt;
-  //     }
-  //   }
-  //   else if (wktPrefix == "MULTIPOLYGON") {
-  //     // parse wkt
-  //     var wktParser = new ol.format.WKT();
-  //     var multiGeometry = wktParser.readGeometry(wkt);
+      // grab individual polygons that comprise this geometry and warp them
+      var polys = multiGeometry.getPolygons();
+      var polyArray = [];
 
-  //     // grab individual polygons that comprise this geometry and warp them
-  //     var polys = multiGeometry.getPolygons();
-  //     var polyArray = [];
+      for (var i = 0, len = polys.length; i < len; i++) {
+        var points = polys[i].getCoordinates();
+        var pointsF = [];
+        points = points[0];
+        for (var j = 0, pLen = points.length; j < pLen; j++) {
+    pointsF[j] = points[j][0] + ' ' + points[j][1];
+        }
+        if (points.length <= 16) {
+          var newPoints = this.saturatePointArray(pointsF);
+          polyArray[i] = "((" + newPoints.join() + "))";
+        } else {
+          polyArray[i] = "((" + pointsF.join() + "))";
+        }
+      }
+      return "MULTIPOLYGON(" + polyArray.join() + ")";
+    }
+    else if (wktPrefix == "MULTILINESTRING") {
+      var wktParser = new OpenLayers.Format.WKT();
+      var multiFeature = wktParser.read(wkt);
 
-  //     for (var i = 0, len = polys.length; i < len; i++) {
-  //       var points = polys[i].getCoordinates();
-  //       var pointsF = [];
-  //       points = points[0];
-  //       for (var j = 0, pLen = points.length; j < pLen; j++) {
-  //   pointsF[j] = points[j][0] + ' ' + points[j][1];
-  //       }
-  //       if (points.length <= 16) {
-  //         var newPoints = this.saturatePointArray(pointsF);
-  //         polyArray[i] = "((" + newPoints.join() + "))";
-  //       } else {
-  //         polyArray[i] = "((" + pointsF.join() + "))";
-  //       }
-  //     }
-  //     return "MULTIPOLYGON(" + polyArray.join() + ")";
-  //   }
-  //   else if (wktPrefix == "MULTILINESTRING") {
-  //     var wktParser = new OpenLayers.Format.WKT();
-  //     var multiFeature = wktParser.read(wkt);
+      var lines = multiFeature.getGeometry().components;
+      var lineArray = [];
+      for (var i = 0, len = lines.length; i < len; i++) {
+        var linesStr = lines[i].toString();
+        var points = linesStr.slice(11, linesStr.length - 1).split(',');
 
-  //     var lines = multiFeature.getGeometry().components;
-  //     var lineArray = [];
-  //     for (var i = 0, len = lines.length; i < len; i++) {
-  //       var linesStr = lines[i].toString();
-  //       var points = linesStr.slice(11, linesStr.length - 1).split(',');
+        if (points.length <= 16) {
+          var newPoints = this.saturatePointArray(points);
+          lineArray[i] = "(" + newPoints.join() + ")";
+        }
+        else {
+          lineArray[i] = "(" + points.join() + ")";
+        }
+      }
+      return "MULTILINESTRING(" + lineArray.join() + ")";
+    }
+    else {
+      // unsupported geometry type, so just return it
+      return wkt;
+    }
+  }
 
-  //       if (points.length <= 16) {
-  //         var newPoints = this.saturatePointArray(points);
-  //         lineArray[i] = "(" + newPoints.join() + ")";
-  //       }
-  //       else {
-  //         lineArray[i] = "(" + points.join() + ")";
-  //       }
-  //     }
-  //     return "MULTILINESTRING(" + lineArray.join() + ")";
-  //   }
-  //   else {
-  //     // unsupported geometry type, so just return it
-  //     return wkt;
-  //   }
-  // }
+  /*
+   * Extracts the geometry type from the WKT string. For example, if the WKT string is
+   * 'POINT(7 10)', 'POINT' will be returned. Assumes the WKT has already been cleaned up
+   * (see AstroGeometry.cleanWkt() for more details).
+   *
+   * Parameter: wkt - the wkt string
+   * Returns: the geometry type string, or null if bad WKT
+   */
+  static extractGeometryType(wkt) {
+    var prefixEnd = wkt.indexOf("(");
+    if (prefixEnd == -1) {
+      return null;
+    }
+    return wkt.substring(0, prefixEnd);
+  }
 
-  // /*
-  //  * Extracts the geometry type from the WKT string. For example, if the WKT string is
-  //  * 'POINT(7 10)', 'POINT' will be returned. Assumes the WKT has already been cleaned up
-  //  * (see AstroGeometry.cleanWkt() for more details).
-  //  *
-  //  * Parameter: wkt - the wkt string
-  //  * Returns: the geometry type string, or null if bad WKT
-  //  */
-  // static extractGeometryType(wkt) {
-  //   var prefixEnd = wkt.indexOf("(");
-  //   if (prefixEnd == -1) {
-  //     return null;
-  //   }
-  //   return wkt.substring(0, prefixEnd);
-  // }
+/*
+ * Fills an array of points, helps to maintain shapes on reprojections.
+ *
+ * Parameter: pointArray - array of points
+ * Returns: wkt-ready string (without prefix)
+ */
+  static saturatePointArray(pointArray) {
+    var newPointArray = [];
+    var n = 0;
+
+    for(var i = 0, len = (pointArray.length - 1); i < len; i++) {
+      var latlon = pointArray[i].toString().replace(/^\s+|\s+$/g,'').split(' ');
+      var nextlatlon = pointArray[i+1].toString().replace(/^\s+|\s+$/g,'').split(' ');
+      var skipPoint = false;
+      //dup points
+      if ( (Number(latlon[0]) == Number(nextlatlon[0])) && (Number(latlon[1]) == Number(nextlatlon[1])) )    {
+        skipPoint = true;
+      }
+      //line to pole
+      if ( ((latlon[0] == 0) || (latlon[0] == 360)) && ((nextlatlon[0] == 0) || (nextlatlon[0] == 360)) )   {
+        skipPoint = true;
+      }
+      if (skipPoint){
+        newPointArray[n] = [pointArray[i]];
+        n+=1;
+        continue;
+      }
+      var midLon = (Number(latlon[0])+Number(nextlatlon[0]))/2;
+      var midLat = (Number(latlon[1])+Number(nextlatlon[1]))/2;
+      var qLon = (Number(latlon[0])+Number(midLon))/2;
+      var qLat = (Number(latlon[1])+Number(midLat))/2;
+      var qqqLon = (Number(nextlatlon[0])+Number(midLon))/2;
+      var qqqLat = (Number(nextlatlon[1])+Number(midLat))/2;
+      var eLon = (Number(latlon[0])+Number(qLon))/2;
+      var eLat = (Number(latlon[1])+Number(qLat))/2;
+      var eeeLon = (Number(midLon)+Number(qLon))/2;
+      var eeeLat = (Number(midLat)+Number(qLat))/2;
+      var eeeeeLon = (Number(midLon)+Number(qqqLon))/2;
+      var eeeeeLat = (Number(midLat)+Number(qqqLat))/2;
+      var eeeeeeeLon = (Number(nextlatlon[0])+Number(qqqLon))/2;
+      var eeeeeeeLat = (Number(nextlatlon[1])+Number(qqqLat))/2;
+      newPointArray[n] = [pointArray[i]];
+      newPointArray[n+1] = [((Number(latlon[0])+eLon)/2)+' '+(Number(latlon[1])+eLat)/2];
+      newPointArray[n+2] = [eLon+' '+eLat];
+      newPointArray[n+3] = [((Number(qLon)+eLon)/2)+' '+(Number(qLat)+eLat)/2];
+      newPointArray[n+4] = [qLon+' '+qLat];
+      newPointArray[n+5] = [((Number(qLon)+eeeLon)/2)+' '+(Number(qLat)+eeeLat)/2];
+      newPointArray[n+6] = [eeeLon+' '+eeeLat];
+      newPointArray[n+7] = [((Number(midLon)+eeeLon)/2)+' '+(Number(midLat)+eeeLat)/2];
+      newPointArray[n+8] = [midLon+' '+midLat];
+      newPointArray[n+9] = [((Number(midLon)+eeeeeLon)/2)+' '+(Number(midLat)+eeeeeLat)/2];
+      newPointArray[n+10] = [eeeeeLon+' '+eeeeeLat];
+      newPointArray[n+11] = [((Number(qqqLon)+eeeeeLon)/2)+' '+(Number(qqqLat)+eeeeeLat)/2];
+      newPointArray[n+12] = [qqqLon+' '+qqqLat];
+      newPointArray[n+13] = [((Number(qqqLon)+eeeeeeeLon)/2)+' '+(Number(qqqLat)+eeeeeeeLat)/2];
+      newPointArray[n+14] = [eeeeeeeLon+' '+eeeeeeeLat];
+      newPointArray[n+15] = [((Number(nextlatlon[0])+eeeeeeeLon)/2)+' '+(Number(nextlatlon[1])+eeeeeeeLat)/2];
+      n+=16;
+    }
+    newPointArray[n] = [pointArray[i]];
+    return(newPointArray);
+  }
 }
 

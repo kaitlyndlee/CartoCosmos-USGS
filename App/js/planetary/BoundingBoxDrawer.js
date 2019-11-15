@@ -54,46 +54,33 @@ class BoundingBoxDrawer extends ShapeDrawer {
     boundingBox.on('drawend', function(e) {
       var wkt = format.writeFeature(e.feature);
       // var wkt = format.writeGeometry(e.feature.getGeometry());
-      console.log(wkt);
       bbox.drawFromButton(wkt);
       bbox.map.removeInteraction(this);
-
-      // document.getElementById('polygonWKT').value = wkt;
-      // var feature = format.readFeature(wkt, {
-      //   dataProjection: 'EPSG:4326',
-      //   featureProjection: 'EPSG:32661'
-      // });
-      // drawBox.getSource().addFeatures(feature);
     });
   }
 
-  // //Save as cylindrical for easy save
-  // saveBox(wkt){
-
-  // }
-
-
   drawFromButton(wkt) {
     // Save all wkt in cylindrical for easy projection switches
-    if (this.map.projName != 'cylindrical') {
+    var projCode = this.map.getView().getProjection().getCode();
+    if (projCode != 'EPSG:4326') {
       var format = new ol.format.WKT();
       var geometry = format.readGeometry(wkt);
-      // if (this.map.projName == 'north-polar stereographic') {
-      //   geometry = geometry.transform('EPSG:32661','EPSG:4326');
-      // } 
-      // else {
-      //   geometry = geometry.transform('EPSG:32761','EPSG:4326');
-      // }
-      // CHECK TO SEE IF IN BOUNDS
+      if (projCode == 'EPSG:32661') {
+        geometry = geometry.transform('EPSG:32661','EPSG:4326');
+      } 
+      else {
+        geometry = geometry.transform('EPSG:32761','EPSG:32761');
+      }
+      // // CHECK TO SEE IF IN BOUNDS
       // if (!AstroVector.prototype.isDrawable(geometry)) {
       //   alert('Bounding Box is not visible in this projection!');
       //   return null;
       // }
       wkt = format.writeGeometry(geometry);
-      document.getElementById('polygonWKT').value = wkt;
+      // document.getElementById('polygonWKT').value = wkt;
 
     }
-    return this.saveShape(wkt, "box");
+    return this.saveShape(wkt);
   }
 
 }

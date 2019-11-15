@@ -204,6 +204,7 @@ class PlanetaryMap {
             ];
 
             projection.setExtent(extent);
+            // projection.setWorldExtent([0, 60, 360, 90]);
             this.projection = currentProj['code'];
             return;
           }

@@ -23,9 +23,8 @@ class ShapeDrawer {
   }
 
   //Save as cylindrical for easy save
-  saveShape(wkt, id) {
-    var vectorState = this.drawFeature(wkt, id);
-    vectorState.index = this.savedFeatures.length;
+  saveShape(wkt) {
+    var vectorState = this.drawFeature(wkt, {});
     this.savedFeatures.push(vectorState);
     return vectorState;
   }
@@ -33,21 +32,51 @@ class ShapeDrawer {
 
 /*
  */
-  drawFeature(wkt, id) {
-    var vectorState = {};
+  drawFeature(wkt, vectorState) {
+    // var vectorState = {};
+    var projCode = this.map.getView().getProjection().getCode();
 
     // clean up WKT in case there is extra unnecessary whitespace
     wkt = GeometryHelper.cleanWkt(wkt);
 
-    // save state
-    vectorState.drawWKT = wkt;  //proj dependent, used for drawing on map
-    vectorState.id = id;
+    if(vectorState.cylindricalWKT == null) {
+      vectorState.cylindricalWKT = wkt;  //proj dependent, used for drawing on map
+    }
     var format = new ol.format.WKT();
-    var vector = format.readFeature(vectorState.drawWKT);
+
+    // Warp shapes when our projection is not cylindrical
+    if(projCode != "EPSG:4326") {
+      var geometry = format.readGeometry(vectorState.cylindricalWKT);
+      var polygon = format.writeGeometry(geometry, {decimals: 2});
+      var wktWarp = GeometryHelper.warpWkt(polygon);
+
+      // Read geometry so that we can transform back to the correct projection
+      var geometryWarp = format.readGeometry(wktWarp);
+      if (projCode == 'EPSG:32661' && vectorState.northPolarWKT == null) {
+        geometryWarp = geometryWarp.transform('EPSG:4326', 'EPSG:32661');
+        vectorState.northPolarWKT = format.writeGeometry(geometryWarp, {decimals: 2});
+      } 
+      else if(projCode == 'EPSG:32761' && vectorState.SouthPolarWKT == null) {
+        geometryWarp = geometryWarp.transform('EPSG:4326','EPSG:32761');
+        vectorState.SouthPolarWKT = format.writeGeometry(geometryWarp, {decimals: 2});
+      }
+    }
+    var vector = format.readFeature(vectorState.cylindricalWKT);
+    var currentWKT = vectorState.cylindricalWKT;
+    if(projCode == "EPSG:32661") {
+      vector = format.readFeature(vectorState.northPolarWKT);
+      currentWKT = vectorState.northPolarWKT;
+    }
+    else if(projCode == "EPSG:32761") {
+      vector = format.readFeature(vectorState.SouthPolarWKT);
+      currentWKT = vectorState.noSouthPolarWKTrthPolarWKT;
+    }
+    console.log("PROJ: " + projCode, " WKT: " + currentWKT);
     vectorState.vectorFeature = vector;
 
     // draw vector
     this.source.addFeature(vector);
+    document.getElementById('polygonWKT').value = currentWKT;
     return vectorState;
   }
 
@@ -55,28 +84,16 @@ class ShapeDrawer {
     this.source = newSource;
   }
 
-  setMap(newMap){
+  setMap(newMap) {
     this.map = newMap;
   }
 
   redrawFeature() {
+    var vectorState;
+    var currentVector;
     for (var i = 0; i < this.savedFeatures.length; i++) {
-      if (!this.savedFeatures[i]) {
-        continue;
-      }
-      console.log(this.savedFeatures[i]);
-      var currentVector = this.savedFeatures[i];
-      var format = new ol.format.WKT();
-      var vector = format.readFeature(currentVector.drawWKT);
-      this.source.addFeature(vector);
-      
-      // var currentGeo = currentVector.vectorFeature.getGeometry();
-      // // if (this.isDrawable(currentGeo)) {
-      //   //var color = (currentVector) ? currentVector.color : null;
-      //   var vectorState = this.draw(currentVector.drawWKT, currentVector.id);
-      //   // update stored vector state
-      //   this.savedFeatures[i] = vectorState;
-      // }
+      currentVector = this.savedFeatures[i];
+      this.drawFeature(currentVector.cylindricalWKT, currentVector);
     }
   }
 
