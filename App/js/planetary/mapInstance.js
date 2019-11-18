@@ -70,29 +70,34 @@ function createControls() {
     latSelect.appendChild(option);
   }
 
-  var drawBoxDiv = document.createElement("button");
-  drawBoxDiv.id = "drawBoxDiv";
-  drawBoxDiv.innerHTML = "Draw Box";
-  drawBoxDiv.onclick = function(){plantaryMap.boundingBoxDrawer.draw();};
-  controlsDiv.appendChild(drawBoxDiv);
+  var drawShapeSelect = document.createElement("select");
+  drawShapeSelect.id = "drawShapeDiv";
+  controlsDiv.appendChild(drawShapeSelect);
 
-  var removeBoxDiv = document.createElement("button");
-  removeBoxDiv.id = "removeBoxDiv";
-  removeBoxDiv.innerHTML = "Remove Box";
-  removeBoxDiv.onclick = function(){plantaryMap.removeBoundingBox();};
-  controlsDiv.appendChild(removeBoxDiv);
+  var placeholder = document.createElement("option");
+  placeholder.text = "Select Shape";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  drawShapeSelect.appendChild(placeholder);
 
-  var boundingBoxCoordinates = document.createElement("div");
-  controlsDiv.appendChild(boundingBoxCoordinates);
+  var shapes = ["Box", "Polygon"];
+  for(var i = 0; i < shapes.length; i++){
+    var option = document.createElement("option");
+    option.value = shapes[i];
+    option.text = shapes[i];
+    drawShapeSelect.appendChild(option);
+  }
 
-  // var minLon = document.createElement("div");
-  // minLon.id = "minLonWKT"
-  // minLon.innerHTML = 'Min Lon: ';
-  // boundingBoxCoordinates.appendChild(minLon);
-
-  // var minLonBox = document.createElement("text");
-  // minLonBox.id = "minLonWKTBox"
-  // boundingBoxCoordinates.appendChild(minLonBox);
+  var drawShapeDiv = document.createElement("button");
+  drawShapeDiv.innerHTML = "Draw Shape";
+  drawShapeDiv.onclick = function(){plantaryMap.shapeDrawer.draw(drawShapeSelect.value);};
+  controlsDiv.appendChild(drawShapeDiv);
+ 
+  var removeShapeDiv = document.createElement("button");
+  removeShapeDiv.id = "removeBoxDiv";
+  removeShapeDiv.innerHTML = "Remove Shape";
+  removeShapeDiv.onclick = function(){plantaryMap.shapeDrawer.removeFeatures();};
+  controlsDiv.appendChild(removeShapeDiv);
 
   var lonLatTitle = document.createElement("div");
   lonLatTitle.className ='lonLatTitle';

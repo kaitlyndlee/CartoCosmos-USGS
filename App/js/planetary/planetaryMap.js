@@ -32,7 +32,7 @@ class PlanetaryMap {
     this.map = null;
     this.zoom = null;
     this.layers = null;
-    this.boundingBoxDrawer = new BoundingBoxDrawer(null, null);;
+    this.shapeDrawer = new ShapeDrawer(null, null);;
     this.vectorSource = null;
 
     this.parseWebAtlas();
@@ -67,7 +67,7 @@ class PlanetaryMap {
       view: this.view,
       layers: mapLayers
     });
-    this.boundingBoxDrawer.setMap(this.map);
+    this.shapeDrawer.setMap(this.map);
 
     this.addControls();
   }
@@ -106,15 +106,16 @@ class PlanetaryMap {
     var scaleLine = new ol.control.ScaleLine();
     var layerSwitcher = new ol.control.LayerSwitcher();
 
+    // Shape drawing controls 
     var vectorSource = new ol.source.Vector({
       wrapX: false
     });
-    this.boundingBoxDrawer.setSource(vectorSource);
+    this.shapeDrawer.setSource(vectorSource);
 
-    var drawBox = new ol.layer.Vector({
+    var drawShape = new ol.layer.Vector({
       source: vectorSource
     });
-    this.map.addLayer(drawBox);
+    this.map.addLayer(drawShape);
 
     this.map.addControl(mousePositionControl);
     this.map.addControl(scaleLine);
@@ -360,7 +361,7 @@ class PlanetaryMap {
     this.destroy();
     this.projName = newProjection.toLowerCase();
     this.createMap();
-    this.boundingBoxDrawer.redrawFeature();
+    this.shapeDrawer.redrawFeature();
   }
 
 
@@ -398,8 +399,8 @@ class PlanetaryMap {
   // }
 
 
-  removeBoundingBox() {
-    this.map.removeInteraction(this.box);
-    this.boundingBoxDrawer.removeFeatures();
-  }
+  // removeShape() {
+  //   this.map.removeInteraction(this.box);
+  //   this.shapeDrawer.removeFeatures();
+  // }
 }
