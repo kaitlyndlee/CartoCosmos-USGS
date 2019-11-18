@@ -178,6 +178,20 @@ class ShapeDrawer {
     this.saveShape(wkt);
   }
 
+  /*
+   * Grabs the WKT text box value and saves and creates a feature from it.
+   * 
+   * When a user edits the WKT text box and presses enter, this function is called
+   * from mapInstance.
+   */
+  drawFromTextBox() {
+    var wkt = document.getElementById("polygonWKT").value;
+    if(wkt) {
+      this.removeFeatures();
+      this.saveShape(wkt);
+    }
+  }
+
 
   /*
    * Creates the draw interaction that allows users

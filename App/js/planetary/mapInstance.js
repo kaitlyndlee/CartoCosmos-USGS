@@ -74,11 +74,19 @@ function createControls() {
   drawShapeSelect.id = "drawShapeDiv";
   controlsDiv.appendChild(drawShapeSelect);
 
-  var placeholder = document.createElement("option");
-  placeholder.text = "Select Shape";
-  placeholder.disabled = true;
-  placeholder.selected = true;
-  drawShapeSelect.appendChild(placeholder);
+  var shapeWKTField = document.createElement("input");
+  shapeWKTField.setAttribute("type", "text");
+  shapeWKTField.rows = 3;
+  shapeWKTField.cols = 100;
+  shapeWKTField.id = "polygonWKT";
+  shapeWKTField.value = "WKT string";
+  shapeWKTField.size = 100;
+  shapeWKTField.onkeyup = function(){
+    if(event.key === 'Enter') {
+      plantaryMap.shapeDrawer.drawFromTextBox();       
+    }
+  };
+  controlsDiv.appendChild(shapeWKTField);
 
   var shapes = ["Box", "Polygon"];
   for(var i = 0; i < shapes.length; i++){

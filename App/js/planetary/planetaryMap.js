@@ -373,34 +373,4 @@ class PlanetaryMap {
     this.map = null;
   }
 
-
-  // drawBoundingBox() {
-
-
-  //   // this.box = new ol.interaction.Draw({
-  //   //   type: "Circle",
-  //   //   source: vectorSource,
-  //   //   geometryFunction: ol.interaction.Draw.createBox()
-  //   // });
-  //   // this.map.addInteraction(this.box);
-
-  //   // var format = new ol.format.WKT();
-  //   // this.box.on('drawend', function(e) {
-  //   //   fara wkt = format.writeFeature(e.feature);
-  //   //   // var wkt = format.writeGeometry(e.feature.getGeometry());
-  //   //   console.log(wkt);
-  //   //   document.getElementById('polygonWKT').value = wkt;
-  //   //   // var feature = format.readFeature(wkt, {
-  //   //   //   dataProjection: 'EPSG:4326',
-  //   //   //   featureProjection: 'EPSG:32661'
-  //   //   // });
-  //   //   // drawBox.getSource().addFeatures(feature);
-  //   // });
-  // }
-
-
-  // removeShape() {
-  //   this.map.removeInteraction(this.box);
-  //   this.shapeDrawer.removeFeatures();
-  // }
 }
