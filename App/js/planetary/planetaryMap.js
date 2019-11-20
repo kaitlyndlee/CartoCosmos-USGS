@@ -32,8 +32,7 @@ class PlanetaryMap {
     this.map = null;
     this.zoom = null;
     this.layers = null;
-    this.boundingBoxDrawer = new BoundingBoxDrawer(null, null);
-    this.polygonDrawer = new PolygonDrawer(null, null);
+    this.shapeDrawer = new ShapeDrawer(null, null);;
     this.vectorSource = null;
 
     this.parseWebAtlas();
@@ -68,8 +67,7 @@ class PlanetaryMap {
       view: this.view,
       layers: mapLayers
     });
-    this.boundingBoxDrawer.setMap(this.map);
-    this.polygonDrawer.setMap(this.map);
+    this.shapeDrawer.setMap(this.map);
 
     this.addControls();
   }
@@ -85,6 +83,11 @@ class PlanetaryMap {
       // Every time the mouse is moved, this function is called and the
       // lat lon are recalculated.
       coordinateFormat: function(coordinate) {
+        /*
+        if(proj == "EPSG:32661") {
+          coordinate = ol.proj.transform(coordinate, "EPSG:32661", "EPSG:4326");
+        }
+        */
         var lonDirection = document.getElementById("lonDirectionSelect");
         var lonDomain = document.getElementById("lonDomainSelect");
         var latType = document.getElementById("latSelect");
@@ -98,8 +101,8 @@ class PlanetaryMap {
         if (latType.options[latType.selectedIndex].value == 'Planetographic') {
           coordinate = GeometryHelper.transformOcentricToOgraphic(coordinate);
         }
-        return ol.coordinate.format(coordinate, '{y}, {x}', 2);
-      },
+        return ol.coordinate.format(coordinate, '{y}, {x}', 4);
+        },
       className: 'lonLatMouseControl',
       target: document.getElementById('lonLat'),
       undefinedHTML: '&nbsp;'
@@ -108,16 +111,50 @@ class PlanetaryMap {
     var scaleLine = new ol.control.ScaleLine();
     var layerSwitcher = new ol.control.LayerSwitcher();
 
+    // Shape drawing controls
     var vectorSource = new ol.source.Vector({
       wrapX: false
     });
-    this.boundingBoxDrawer.setSource(vectorSource);
-    this.polygonDrawer.setSource(vectorSource);
 
-    var drawBox = new ol.layer.Vector({
+    // Add modify interaction here so that we can modify a shape without clicking
+    // the "draw shape" button.
+    var modify = new ol.interaction.Modify({
       source: vectorSource
     });
-    this.map.addLayer(drawBox);
+
+    var thisContext = this;
+    modify.on("modifyend", function(event) {
+      var format = new ol.format.WKT();
+      event.features.forEach(function(feature) {
+        if(feature) {
+          var wkt = format.writeFeature(feature);
+          thisContext.shapeDrawer.removeFeatures();
+          wkt = thisContext.shapeDrawer.transformGeometry(wkt);
+          thisContext.shapeDrawer.saveShape(wkt);
+        }
+      });
+    });
+    this.map.addInteraction(modify);
+    this.shapeDrawer.setSource(vectorSource);
+
+    // Set the style to rgba(0, 0, 0, 0) so that the shape is
+    // transparent. This is because we add a feature in the drawFeature
+    // method of ShapeDrawer. We do not want the original shape to be drawn
+    // when we warp the projection.
+    // There might be a better way to do this
+    var drawShape = new ol.layer.Vector({
+      source: vectorSource,
+      style: new ol.style.Style({
+        fill: new ol.style.Fill({
+         color: "rgba(0, 0, 0, 0)"
+       }),
+        stroke: new ol.style.Stroke({
+          color: "rgba(0, 0, 0, 0)",
+          width: 0
+        })
+      })
+    });
+    this.map.addLayer(drawShape);
 
     this.map.addControl(mousePositionControl);
     this.map.addControl(scaleLine);
@@ -128,7 +165,7 @@ class PlanetaryMap {
   /**
    * Parses WebAtlas JSON that contains data on each layer separated by target.
    * Adds JSON layer to correct key-value pair to be used in createMap.
-   * Also checks each target for a valid North/ South Stereographic Layer.
+   *
    *
    * @return {object} Key-Value pair of base layers and overlays to be
    *                          added to the map.
@@ -137,9 +174,7 @@ class PlanetaryMap {
     var layers = {
       'base': [],
       'overlays': [],
-      'wfs': [],
-      'hasNorth': false,
-      'hasSouth': false
+      'wfs': []
     };
 
     var targets = myJSONmaps['targets'];
@@ -169,16 +204,6 @@ class PlanetaryMap {
         }
       }
     }
-
-    for(var i = 0; i < layers['base'].length; i++) {
-      if(layers['base'][i]['projection'] == "north-polar stereographic") {
-        layers['hasNorth'] = true;
-      }
-
-      if(layers['base'][i]['projection'] == "south-polar stereographic") {
-        layers['hasSouth'] = true;
-      }
-    }
     this.layers = layers;
   }
 
@@ -206,22 +231,28 @@ class PlanetaryMap {
         for(var j = 0; j < projections.length; j++) {
           var currentProj = projections[j];
 
+          proj4.defs(currentProj['code'], currentProj['string']);
+          ol.proj.proj4.register(proj4);
+          var projection = ol.proj.get(currentProj['code']);
+
+          var extent = [
+            currentProj['extent']['left'],
+            currentProj['extent']['bottom'],
+            currentProj['extent']['right'],
+            currentProj['extent']['top']
+          ];
+
+          var worldExtent = [
+            currentProj['worldExtent']['left'],
+            currentProj['worldExtent']['bottom'],
+            currentProj['worldExtent']['right'],
+            currentProj['worldExtent']['top']
+          ];
+          projection.setExtent(extent);
+          projection.setWorldExtent(worldExtent);
+
           if(currentProj['name'].toLowerCase() == this.projName.toLowerCase()) {
-            proj4.defs(currentProj['code'], currentProj['string']);
-            ol.proj.proj4.register(proj4);
-            var projection = ol.proj.get(currentProj['code']);
-
-            var extent = [
-              currentProj['extent']['left'],
-              currentProj['extent']['bottom'],
-              currentProj['extent']['right'],
-              currentProj['extent']['top']
-            ];
-
-            projection.setExtent(extent);
-            // projection.setWorldExtent([0, 60, 360, 90]);
             this.projection = currentProj['code'];
-            return;
           }
         }
       }
@@ -254,12 +285,15 @@ class PlanetaryMap {
         var currentLayer = this.layers['base'][i];
 
         var computedMaxResolution = (360 / 256);
-        // Set to true for now
+
+        // Set to true by default
         var wrapCheck = true;
+
         if (currentLayer['units'] == 'm') {
           wrapCheck = false;
           computedMaxResolution = 20000;
         }
+
         if(currentLayer['projection'].toLowerCase() == this.projName.toLowerCase()) {
           var isPrimary = (currentLayer['primary'] == 'true');
           var baseLayer = new ol.layer.Tile({
@@ -375,8 +409,7 @@ class PlanetaryMap {
     this.destroy();
     this.projName = newProjection.toLowerCase();
     this.createMap();
-    this.boundingBoxDrawer.redrawFeature();
-    this.polygonDrawer.redrawFeature();
+    this.shapeDrawer.redrawFeature();
   }
 
 
@@ -388,35 +421,4 @@ class PlanetaryMap {
     this.map = null;
   }
 
-
-  // drawBoundingBox() {
-
-
-  //   // this.box = new ol.interaction.Draw({
-  //   //   type: "Circle",
-  //   //   source: vectorSource,
-  //   //   geometryFunction: ol.interaction.Draw.createBox()
-  //   // });
-  //   // this.map.addInteraction(this.box);
-
-  //   // var format = new ol.format.WKT();
-  //   // this.box.on('drawend', function(e) {
-  //   //   fara wkt = format.writeFeature(e.feature);
-  //   //   // var wkt = format.writeGeometry(e.feature.getGeometry());
-  //   //   console.log(wkt);
-  //   //   document.getElementById('polygonWKT').value = wkt;
-  //   //   // var feature = format.readFeature(wkt, {
-  //   //   //   dataProjection: 'EPSG:4326',
-  //   //   //   featureProjection: 'EPSG:32661'
-  //   //   // });
-  //   //   // drawBox.getSource().addFeatures(feature);
-  //   // });
-  // }
-
-
-  removeBoundingBox() {
-    this.map.removeInteraction(this.box);
-    this.boundingBoxDrawer.removeFeatures();
-    this.polygonDrawer.removeFeatures();
-  }
 }
