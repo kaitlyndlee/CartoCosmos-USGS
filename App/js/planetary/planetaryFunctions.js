@@ -32,6 +32,12 @@ projectionDefs = {
             "right": 2357032,
             "top": 2357032,
             "bottom": -2357032
+          },
+          "worldExtent": {
+            "left": 0,
+            "right": 60,
+            "top": 360,
+            "bottom": 90
           }
         },
         {
@@ -39,6 +45,12 @@ projectionDefs = {
           "code": "EPSG:4326",
           "string": "+proj=longlat +a=3396190 +b=3396190 +no_defs",
           "extent": {
+            "left": -180,
+            "right": 180,
+            "top": 90,
+            "bottom": -90
+          },
+          "worldExtent": {
             "left": -180,
             "right": 180,
             "top": 90,
@@ -54,6 +66,12 @@ projectionDefs = {
             "right": 2357032,
             "top": 2357032,
             "bottom": -2357032
+          },
+          "worldExtent": {
+            "left": 0,
+            "right": -90,
+            "top": 360,
+            "bottom": -60
           }
         }
       ] 
@@ -81,12 +99,6 @@ class GeometryHelper {
 
   static majorRadius = null;
   static minorRadius = null;
-
-  // static transform180180To0360(point) {
-  //   var x = point[0];
-  //   if (x < 0) {point[0] = x + 360;}
-  //   return point;
-  // }
   
   /*
    * Converts coordinate from -180/180 to 0/360 lon domain.
@@ -98,12 +110,6 @@ class GeometryHelper {
     lon = ((360 + (lon % 360)) % 360);
     return [lon, point[1]];
   } 
-  
-  // static transform0360To180180(point) {
-  //   var x = point[0];
-  //   if (x > 180) {point[0] = x - 360;}
-  //   return point;
-  // }
   
 
   /*
@@ -118,31 +124,6 @@ class GeometryHelper {
     }
     return [lon, point[1]];
   }
-
-  // static transformDatelineShift(point) {
-  //   point[0] = point[0] + 360;
-  //   return point;
-  // }
-
-  // static transformDatelineUnShift(point) {
-  //     point[0] = point[0] - 360;
-  //     return point;
-  // }
-
-  // static transformDanglers(point) {
-  //   var x = point[0];
-  //   while (x < 0) {x = x + 360;}
-  //   while (x > 360) {x = x - 360;}
-  //   point[0] = x;
-  //   return point;
-  // }
-
-
-  // no reversal - works both ways
-  // static transformPosEastPosWest(point) {
-  //     point[0] = 360 - point[0];
-  //     return point;
-  // }
   
 
   /*
@@ -207,8 +188,11 @@ class GeometryHelper {
    *
    * For example, '  MULTIPOINT ((10 10), (45 45))  ' will become 'MULTIPOINT((10 10),(45 45))'.
    *
-   * Parameter: wkt - the wkt string to be cleaned
-   * Returns: the clean wkt string
+   * Taken from AstroWebMaps
+   *
+   * @param {ol.format.wkt} wkt - the wkt string to be cleaned.
+   * 
+   * @return {ol.format.wkt} the clean wkt string
    */
   static cleanWkt(wkt) {
     // trim
@@ -223,10 +207,13 @@ class GeometryHelper {
    * shape on reprojections. Supported geometry types include POINT, MULTIPOINT,
    * POLYGON, MULTIPOLYGON, LINESTRING, MULTILINESTRING.
    *
-   * IMPORTANT: Polygons and MultiPolygons containing holes (interior rings) are not supported.
+   * Note: Polygons and MultiPolygons containing holes (interior rings) are not supported.
    *
-   * Parameter: wkt - wkt string (EPSG:4326)
-   * Returns: warped wkt string
+   * Taken from AstroWebMaps
+   *
+   * @param {ol.format.wkt} wkt - WKT to warp
+   *
+   * @return {ol.format.wkt} the warped WKT
    */
   static warpWkt(wkt) {
     // extract the geometry type (prefix)
@@ -273,13 +260,16 @@ class GeometryHelper {
         var points = polys[i].getCoordinates();
         var pointsF = [];
         points = points[0];
+
         for (var j = 0, pLen = points.length; j < pLen; j++) {
-    pointsF[j] = points[j][0] + ' ' + points[j][1];
+          pointsF[j] = points[j][0] + ' ' + points[j][1];
         }
+
         if (points.length <= 16) {
           var newPoints = this.saturatePointArray(pointsF);
           polyArray[i] = "((" + newPoints.join() + "))";
-        } else {
+        } 
+        else {
           polyArray[i] = "((" + pointsF.join() + "))";
         }
       }
@@ -316,8 +306,11 @@ class GeometryHelper {
    * 'POINT(7 10)', 'POINT' will be returned. Assumes the WKT has already been cleaned up
    * (see AstroGeometry.cleanWkt() for more details).
    *
-   * Parameter: wkt - the wkt string
-   * Returns: the geometry type string, or null if bad WKT
+   * Taken from AstroWebMaps
+   *
+   * @param {ol.format.wkt} wkt - the wkt string
+   * 
+   * @return {ol.format.wkt} the geometry type string or null if bad WKT
    */
   static extractGeometryType(wkt) {
     var prefixEnd = wkt.indexOf("(");
@@ -330,8 +323,11 @@ class GeometryHelper {
 /*
  * Fills an array of points, helps to maintain shapes on reprojections.
  *
- * Parameter: pointArray - array of points
- * Returns: wkt-ready string (without prefix)
+ * Taken from AstroWebMaps
+ *
+ * @param {array} pointArray - array of points.
+ * 
+ * @return {array} array of new points.
  */
   static saturatePointArray(pointArray) {
     var newPointArray = [];
@@ -341,7 +337,8 @@ class GeometryHelper {
       var latlon = pointArray[i].toString().replace(/^\s+|\s+$/g,'').split(' ');
       var nextlatlon = pointArray[i+1].toString().replace(/^\s+|\s+$/g,'').split(' ');
       var skipPoint = false;
-      //dup points
+
+      // Skip duplicate points
       if ( (Number(latlon[0]) == Number(nextlatlon[0])) && (Number(latlon[1]) == Number(nextlatlon[1])) )    {
         skipPoint = true;
       }
@@ -351,7 +348,7 @@ class GeometryHelper {
       }
       if (skipPoint){
         newPointArray[n] = [pointArray[i]];
-        n+=1;
+        n += 1;
         continue;
       }
       var midLon = (Number(latlon[0])+Number(nextlatlon[0]))/2;
@@ -384,10 +381,10 @@ class GeometryHelper {
       newPointArray[n+13] = [((Number(qqqLon)+eeeeeeeLon)/2)+' '+(Number(qqqLat)+eeeeeeeLat)/2];
       newPointArray[n+14] = [eeeeeeeLon+' '+eeeeeeeLat];
       newPointArray[n+15] = [((Number(nextlatlon[0])+eeeeeeeLon)/2)+' '+(Number(nextlatlon[1])+eeeeeeeLat)/2];
-      n+=16;
+      n += 16;
     }
     newPointArray[n] = [pointArray[i]];
-    return(newPointArray);
+    return (newPointArray);
   }
 }
 

@@ -12,18 +12,21 @@
 createControls();
 var planetaryMap = new PlanetaryMap('mars', 'cylindrical');
 
-
 /*
  * Creates divs for projections, lon directons, lon domains, and
  * lat types.
  */
 function createControls() {
   var controlsDiv = document.getElementById('controls');
+  var mapOptions = document.getElementById("map-controls");
+  var drawOptions = document.getElementById("draw-controls");
 
   var projectionSelect = document.createElement("select");
   projectionSelect.id = "projSelect";
   projectionSelect.onchange = function(){switchProjection(projectionSelect.value);};
-  controlsDiv.appendChild(projectionSelect);
+  //controlsDiv.appendChild(projectionSelect);
+  var projectionList = document.createElement("li");
+  mapOptions.appendChild(projectionList.appendChild(projectionSelect));
 
   var projOptions = ["Cylindrical", "North-polar Stereographic", "South-polar Stereographic"];
   for(var i = 0; i < projOptions.length; i++){
@@ -35,7 +38,9 @@ function createControls() {
 
   var lonDirectionSelect = document.createElement("select");
   lonDirectionSelect.id = "lonDirectionSelect";
-  controlsDiv.appendChild(lonDirectionSelect);
+  //controlsDiv.appendChild(lonDirectionSelect);
+  var lonDirList = document.createElement("li");
+  mapOptions.appendChild(lonDirList.appendChild(lonDirectionSelect));
 
   var directions = ["Positive East", "Positive West"];
   for(var i = 0; i < directions.length; i++){
@@ -47,7 +52,9 @@ function createControls() {
 
   var lonDomainSelect = document.createElement("select");
   lonDomainSelect.id = "lonDomainSelect";
-  controlsDiv.appendChild(lonDomainSelect);
+  //controlsDiv.appendChild(lonDomainSelect);
+  var domainList = document.createElement("li");
+  mapOptions.appendChild(domainList.appendChild(lonDomainSelect));
 
   var domainsText = ["0\u00B0 to 360\u00B0", "-180\u00B0 to 180\u00B0\u00A0"];
   var domains = ["360", "180"];
@@ -60,7 +67,9 @@ function createControls() {
 
   var latSelect = document.createElement("select");
   latSelect.id = "latSelect";
-  controlsDiv.appendChild(latSelect);
+  //controlsDiv.appendChild(latSelect);
+  var latList = document.createElement("li");
+  mapOptions.appendChild(latList.appendChild(latSelect));
 
   var latOptions = ["Planetocentric", "Planetographic"];
   for(var i = 0; i < latOptions.length; i++){
@@ -70,40 +79,56 @@ function createControls() {
     latSelect.appendChild(option);
   }
 
-  var drawBoxDiv = document.createElement("button");
-  drawBoxDiv.id = "drawBoxDiv";
-  drawBoxDiv.innerHTML = "Draw Box";
-  drawBoxDiv.onclick = function(){planetaryMap.boundingBoxDrawer.draw();};
-  controlsDiv.appendChild(drawBoxDiv);
+  var drawShapeSelect = document.createElement("select");
+  drawShapeSelect.id = "drawShapeDiv";
+  //controlsDiv.appendChild(drawShapeSelect);
+  var drawSelectList = document.createElement("li");
+  drawOptions.appendChild(drawSelectList.appendChild(drawShapeSelect));
 
-  var drawPolygonDiv = document.createElement("button");
-  drawPolygonDiv.id = "drawPolygonDiv";
-  drawPolygonDiv.innerHTML = "Draw Polygon";
-  drawPolygonDiv.onclick = function(){planetaryMap.polygonDrawer.draw();};
-  controlsDiv.appendChild(drawPolygonDiv);
+  var shapeWKTField = document.createElement("input");
+  shapeWKTField.setAttribute("type", "text");
+  shapeWKTField.rows = 3;
+  shapeWKTField.cols = 100;
+  shapeWKTField.id = "polygonWKT";
+  shapeWKTField.value = "WKT string";
+  shapeWKTField.size = 25;
+  shapeWKTField.onkeyup = function(){
+    if(event.key === 'Enter') {
+      planetaryMap.shapeDrawer.drawFromTextBox();
+    }
+  };
+  //controlsDiv.appendChild(shapeWKTField);
+  var shapeList = document.createElement("li");
 
-  var removeBoxDiv = document.createElement("button");
-  removeBoxDiv.id = "removeBoxDiv";
-  removeBoxDiv.innerHTML = "Remove Box";
-  removeBoxDiv.onclick = function(){planetaryMap.removeBoundingBox();};
-  controlsDiv.appendChild(removeBoxDiv);
+  var shapes = ["Box", "Polygon"];
+  for(var i = 0; i < shapes.length; i++){
+    var option = document.createElement("option");
+    option.value = shapes[i];
+    option.text = shapes[i];
+    drawShapeSelect.appendChild(option);
+  }
 
-  var boundingBoxCoordinates = document.createElement("div");
-  controlsDiv.appendChild(boundingBoxCoordinates);
+  var drawShapeDiv = document.createElement("button");
+  drawShapeDiv.innerHTML = "Draw Shape";
+  drawShapeDiv.onclick = function(){planetaryMap.shapeDrawer.draw(drawShapeSelect.value);};
+  //controlsDiv.appendChild(drawShapeDiv);
+  var drawShapeList = document.createElement("li");
+  drawOptions.appendChild(drawShapeList.appendChild(drawShapeDiv));
 
-  // var minLon = document.createElement("div");
-  // minLon.id = "minLonWKT"
-  // minLon.innerHTML = 'Min Lon: ';
-  // boundingBoxCoordinates.appendChild(minLon);
-
-  // var minLonBox = document.createElement("text");
-  // minLonBox.id = "minLonWKTBox"
-  // boundingBoxCoordinates.appendChild(minLonBox);
+  var removeShapeDiv = document.createElement("button");
+  removeShapeDiv.id = "removeBoxDiv";
+  removeShapeDiv.innerHTML = "Remove Shape";
+  removeShapeDiv.onclick = function(){planetaryMap.shapeDrawer.removeFeatures();};
+  //controlsDiv.appendChild(removeShapeDiv);
+  var removeList = document.createElement("li");
+  drawOptions.appendChild(removeList.appendChild(removeShapeDiv));
 
   var lonLatTitle = document.createElement("div");
   lonLatTitle.className ='lonLatTitle';
   lonLatTitle.innerHTML = 'Lat Lon: &nbsp;';
   controlsDiv.appendChild(lonLatTitle);
+
+  drawOptions.appendChild(shapeList.appendChild(shapeWKTField));
 
   createLonLatDiv();
 }
@@ -142,7 +167,6 @@ function switchProjection(newProjection) {
   refreshLonLatDiv();
   planetaryMap.switchProjection(newProjection);
 }
-
 
 // TODO Change this?
 function parseWebAtlas() {
@@ -229,6 +253,3 @@ targetSelect.onchange = function() {
   switchTarget(target);
   //planetaryMap.map.getView().getProjection());
 }
-
-
-//drawControls();

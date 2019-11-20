@@ -12,6 +12,7 @@
     <script src="js/ol-layerswitcher/dist/ol-layerswitcher.js"></script>
     <script src="js/planetary/planetaryFunctions.js"></script>
     <script src="js/planetary/planetaryMap.js"></script>
+    <script src="js/planetary/ShapeDrawer.js"></script>
 
     <!-- Constains JSON with target and projection information -->
     <script src="https://astrowebmaps.wr.usgs.gov/webmapatlas/Layers/maps.js"></script>
@@ -22,48 +23,59 @@
         width: 50%;
         border: solid;
       }
+
+      ul {
+        list-style-type: none;
+      }
+
+      .MapOptions {
+        width: 9%;
+        background-color: #d9d9d9;
+      }
     </style>
     <title>Mars Map</title>
   </head>
   <body>
-    <h2>Mars Map</h2>
+    <h2>Openlayers Map Example</h2>
     <h3>Select Target</h3>
     <select id="target-select"></select>
     <br>
+<!--
+    <select id="target" onchange="switchTarget();"><option value="Europa">Europa</option><option value="Io">Io</option><option selected="selected" value="Mars">Mars</option><option value="Mercury">Mercury</option><option value="Moon">Moon</option>
+    <select> -->
     <script>
       var layerSelect = document.getElementById("layer-select");
       var targetSelect = document.getElementById("target-select");
       var targets = [];
-
       for(i=0; i<myJSONmaps['targets'].length; i++){
         currentTarget = myJSONmaps['targets'][i]['name'];
         //console.log(myJSONmaps['targets'][i]);
-
         if(!targets.includes(currentTarget)){
           targets.push(currentTarget);
           targets = targets.sort();
         }
       }
-
       for(j=0; j<targets.length; j++){
         var currentOption = document.createElement("option");
         currentOption.value = String(targets[j]);
         currentOption.text = String(targets[j]);
-
         // Set Mars to default
         if(currentOption.value == "MARS"){
           currentOption.selected = true;
         }
-
         targetSelect.add(currentOption);
       }
     </script>
-    <!--
-    <select id="target" onchange="switchTarget();"><option value="Europa">Europa</option><option value="Io">Io</option><option selected="selected" value="Mars">Mars</option><option value="Mercury">Mercury</option><option value="Moon">Moon</option>
-    <select> -->
-    <br>
     <div id="map" class="map"></div>
     <div id="controls"></div>
+    <div id="map-options" class="MapOptions">
+      <h4>Map Options</h4>
+      <ul id="map-controls"></ul>
+    </div>
+    <div id="draw-controls" class="MapOptions">
+      <h4>Draw Controls</h4>
+      <ul id="draw-controls"></ul>
+    </div>
     <script src="js/planetary/mapInstance.js"></script>
   </body>
 </html>
