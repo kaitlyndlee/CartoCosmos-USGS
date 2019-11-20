@@ -60,7 +60,6 @@ class ShapeDrawer {
    */
   drawFeature(wkt, featureState) {
     var projCode = this.map.getView().getProjection().getCode();
-
     // clean up WKT in case there is extra unnecessary whitespace
     wkt = GeometryHelper.cleanWkt(wkt);
 
@@ -82,9 +81,9 @@ class ShapeDrawer {
         geometryWarp = geometryWarp.transform('EPSG:4326', 'EPSG:32661');
         featureState.northPolarWKT = format.writeGeometry(geometryWarp, {decimals: 2});
       } 
-      else if(projCode == 'EPSG:32761' && featureState.SouthPolarWKT == null) {
+      else if(projCode == 'EPSG:32761' && featureState.southPolarWKT == null) {
         geometryWarp = geometryWarp.transform('EPSG:4326','EPSG:32761');
-        featureState.SouthPolarWKT = format.writeGeometry(geometryWarp, {decimals: 2});
+        featureState.southPolarWKT = format.writeGeometry(geometryWarp, {decimals: 2});
       }
     }
     // Write out the feature to be drawn on the map
@@ -95,10 +94,22 @@ class ShapeDrawer {
       currentWKT = featureState.northPolarWKT;
     }
     else if(projCode == "EPSG:32761") {
-      feature = format.readFeature(featureState.SouthPolarWKT);
-      currentWKT = featureState.noSouthPolarWKTrthPolarWKT;
+      feature = format.readFeature(featureState.southPolarWKT);
+      currentWKT = featureState.southPolarWKT;
     }
     featureState.storedFeature = feature;
+
+    // Set style here so that the feature is not transparent
+    // since we set the styling in PlanetaryMap to transparent.
+    feature.setStyle(new ol.style.Style({
+        fill: new ol.style.Fill({
+         color: "rgba(255, 255, 255, 0.5)"
+       }),
+        stroke: new ol.style.Stroke({
+          color: "rgba(255, 255, 255, 255)",
+          width: 3
+        })
+      }))
 
     // draw feature
     this.source.addFeature(feature);
@@ -160,7 +171,7 @@ class ShapeDrawer {
    * @param {OL.Format.WKT} wkt - Well Known Text representing the 
    *                        feature to be saved and drawn.
    */
-  drawFromButton(wkt) {
+  transformGeometry(wkt) {
     // Save all wkt in cylindrical for easy projection switches
     var projCode = this.map.getView().getProjection().getCode();
     if (projCode != 'EPSG:4326') {
@@ -170,12 +181,13 @@ class ShapeDrawer {
         geometry = geometry.transform('EPSG:32661','EPSG:4326');
       } 
       else {
-        geometry = geometry.transform('EPSG:32761','EPSG:32761');
+        geometry = geometry.transform('EPSG:32761','EPSG:4326');
       }
       wkt = format.writeGeometry(geometry);
 
     }
-    this.saveShape(wkt);
+    return wkt;
+    // this.saveShape(wkt);
   }
 
   /*
@@ -188,6 +200,7 @@ class ShapeDrawer {
     var wkt = document.getElementById("polygonWKT").value;
     if(wkt) {
       this.removeFeatures();
+      wkt = this.transformGeometry(wkt);
       this.saveShape(wkt);
     }
   }
@@ -203,7 +216,7 @@ class ShapeDrawer {
    *
    * Called when the 'Draw Shape' button is clicked by the user.
    *
-   * @oaram {string} shape - String that stores the type of shape to draw
+   * @param {string} shape - String that stores the type of shape to draw
    *                         Possible values are Box and Polygon.
    */
   draw(shape) {
@@ -222,20 +235,28 @@ class ShapeDrawer {
       });
     }
     this.map.addInteraction(shapeDraw);
+
+    // Add snap intercation so that when a user click the "draw box" button
+    // and wants to edit a shape on the map, only one interaction is shown 
+    // by the cursor.
+    var snap = new ol.interaction.Snap({source: this.source});
+    this.map.addInteraction(snap);
     
     // Store this context so that it is accessible inside of the
     // drawstart and drawend listeners
-    var drawInteraction = this;
+    var shapeDrawer = this;
 
     var format = new ol.format.WKT();
-    shapeDraw.on('drawstart', function(e) {
-      drawInteraction.removeFeatures();
+    shapeDraw.on('drawstart', function(event) {
+      shapeDrawer.removeFeatures();
     });
 
-    shapeDraw.on('drawend', function(e) {
-      var wkt = format.writeFeature(e.feature);
-      drawInteraction.drawFromButton(wkt);
-      drawInteraction.map.removeInteraction(this);
+    shapeDraw.on('drawend', function(event) {
+      var wkt = format.writeFeature(event.feature);
+      // shapeDrawer.drawFromButton(wkt);
+      wkt = shapeDrawer.transformGeometry(wkt);
+      shapeDrawer.saveShape(wkt);
+      shapeDrawer.map.removeInteraction(this);
     });
   }
 }

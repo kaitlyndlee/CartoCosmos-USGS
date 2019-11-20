@@ -96,7 +96,7 @@ class PlanetaryMap {
         if (latType.options[latType.selectedIndex].value == 'Planetographic') {
           coordinate = GeometryHelper.transformOcentricToOgraphic(coordinate);
         }
-        return ol.coordinate.format(coordinate, '{y}, {x}', 2);
+        return ol.coordinate.format(coordinate, '{y}, {x}', 4);
       },
       className: 'lonLatMouseControl',
       target: document.getElementById('lonLat'),
@@ -110,10 +110,44 @@ class PlanetaryMap {
     var vectorSource = new ol.source.Vector({
       wrapX: false
     });
+
+    // Add modify interaction here so that we can modify a shape without clicking
+    // the "draw shape" button.
+    var modify = new ol.interaction.Modify({
+      source: vectorSource
+    });
+
+    var thisContext = this;
+    modify.on("modifyend", function(event) {
+      var format = new ol.format.WKT();
+      event.features.forEach(function(feature) {
+        if(feature) {
+          var wkt = format.writeFeature(feature);
+          thisContext.shapeDrawer.removeFeatures();
+          wkt = thisContext.shapeDrawer.transformGeometry(wkt);
+          thisContext.shapeDrawer.saveShape(wkt);
+        }
+      });
+    });
+    this.map.addInteraction(modify);
     this.shapeDrawer.setSource(vectorSource);
 
+    // Set the style to rgba(0, 0, 0, 0) so that the shape is
+    // transparent. This is because we add a feature in the drawFeature
+    // method of ShapeDrawer. We do not want the original shape to be drawn
+    // when we warp the projection.
+    // There might be a better way to do this
     var drawShape = new ol.layer.Vector({
-      source: vectorSource
+      source: vectorSource,
+      style: new ol.style.Style({
+        fill: new ol.style.Fill({
+         color: "rgba(0, 0, 0, 0)"
+       }),
+        stroke: new ol.style.Stroke({
+          color: "rgba(0, 0, 0, 0)",
+          width: 0
+        })
+      })
     });
     this.map.addLayer(drawShape);
 
@@ -192,22 +226,28 @@ class PlanetaryMap {
         for(var j = 0; j < projections.length; j++) {
           var currentProj = projections[j];
 
+          proj4.defs(currentProj['code'], currentProj['string']);
+          ol.proj.proj4.register(proj4);
+          var projection = ol.proj.get(currentProj['code']);
+
+          var extent = [
+            currentProj['extent']['left'],
+            currentProj['extent']['bottom'],
+            currentProj['extent']['right'],
+            currentProj['extent']['top']
+          ];
+
+          var worldExtent = [
+            currentProj['worldExtent']['left'],
+            currentProj['worldExtent']['bottom'],
+            currentProj['worldExtent']['right'],
+            currentProj['worldExtent']['top']
+          ];
+          projection.setExtent(extent);
+          projection.setWorldExtent(worldExtent);
+          
           if(currentProj['name'].toLowerCase() == this.projName.toLowerCase()) {
-            proj4.defs(currentProj['code'], currentProj['string']);
-            ol.proj.proj4.register(proj4);
-            var projection = ol.proj.get(currentProj['code']);
-
-            var extent = [
-              currentProj['extent']['left'],
-              currentProj['extent']['bottom'],
-              currentProj['extent']['right'],
-              currentProj['extent']['top']
-            ];
-
-            projection.setExtent(extent);
-            // projection.setWorldExtent([0, 60, 360, 90]);
             this.projection = currentProj['code'];
-            return;
           }
         }
       }
@@ -240,12 +280,15 @@ class PlanetaryMap {
         var currentLayer = this.layers['base'][i];
 
         var computedMaxResolution = (360 / 256);
-        // Set to true for now
+
+        // Set to true by default
         var wrapCheck = true;
+
         if (currentLayer['units'] == 'm') {
           wrapCheck = false;
           computedMaxResolution = 20000;
         }
+
         if(currentLayer['projection'].toLowerCase() == this.projName.toLowerCase()) {
           var isPrimary = (currentLayer['primary'] == 'true');
           var baseLayer = new ol.layer.Tile({
