@@ -78,16 +78,20 @@ class PlanetaryMap {
    * and adds them to the OL map.
    */
   addControls() {
+    var current = this.projection;
     // Uses the view projection by default to transform coordinates
     var mousePositionControl = new ol.control.MousePosition({
       // Every time the mouse is moved, this function is called and the
       // lat lon are recalculated.
       coordinateFormat: function(coordinate) {
-        /*
-        if(proj == "EPSG:32661") {
+        if(current == "EPSG:32661") {
           coordinate = ol.proj.transform(coordinate, "EPSG:32661", "EPSG:4326");
         }
-        */
+
+        if(current == "EPSG:32761") {
+          coordinate = ol.proj.transform(coordinate, "EPSG:32761", "EPSG:4326");
+        }
+
         var lonDirection = document.getElementById("lonDirectionSelect");
         var lonDomain = document.getElementById("lonDomainSelect");
         var latType = document.getElementById("latSelect");

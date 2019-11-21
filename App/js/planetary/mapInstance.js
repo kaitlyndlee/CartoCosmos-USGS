@@ -34,7 +34,19 @@ function createControls() {
     option.value = projOptions[i];
     option.text = projOptions[i];
     projectionSelect.appendChild(option);
+    projectionSelect.style.display = "none";
   }
+
+  /*
+  var container = document.createElement("li");
+  var north = document.createElement("input");
+  //north.type = "button";
+  north.src = "images/north-pole.png";
+  north.value = "North";
+  //north.onclick = console.log("hello");
+  container.appendChild(north);
+  projList.appendChild(container);
+*/
 
   var lonDirectionSelect = document.createElement("select");
   lonDirectionSelect.id = "lonDirectionSelect";
