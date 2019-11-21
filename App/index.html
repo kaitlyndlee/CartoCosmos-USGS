@@ -19,18 +19,34 @@
 
     <style>
       .map {
-        height: 400px;
-        width: 50%;
+        height: 800px;
+        width: 100%;
         border: solid;
       }
 
       ul {
         list-style-type: none;
+        padding-left: 0px;
       }
 
       .MapOptions {
-        width: 9%;
+        width: 8%;
         background-color: #d9d9d9;
+        float: left;
+        border: solid;
+      }
+
+      .DrawOptions {
+        margin-left: 0px;
+        margin-right: 80%;
+        width: 10%;
+        background-color: #d9d9d9;
+        float: right;
+        border: solid;
+      }
+
+      .projectionDiv {
+        float: left;
       }
     </style>
     <title>Mars Map</title>
@@ -66,14 +82,43 @@
         targetSelect.add(currentOption);
       }
     </script>
+    <script>
+      function north() {
+        document.getElementById("projSelect").selectedIndex = 1;
+        document.getElementById("projSelect").onchange();
+      }
+
+      function cylindrical() {
+        document.getElementById("projSelect").selectedIndex = 0;
+        document.getElementById("projSelect").onchange();
+      }
+
+      function south() {
+        document.getElementById("projSelect").selectedIndex = 2;
+        document.getElementById("projSelect").onchange();
+      }
+    </script>
     <div id="map" class="map"></div>
     <div id="controls"></div>
     <div id="map-options" class="MapOptions">
-      <h4>Map Options</h4>
-      <ul id="map-controls"></ul>
+      <h4 style="margin-top:0;">Map Options</h4>
+      <table>
+        <tr>
+          <th>
+            <ul id="proj-list" style="margin-top:0;">
+              <li><input id="north" type="image" src="images/north-pole.png" onclick="north()"></li>
+              <li><input id="cylindrical" type="image" src="images/cylindrical.png" onclick="cylindrical()"></li>
+              <li><input id="south" type="image" src="images/south-pole.png" onclick="south()"></li>
+            </ul>
+          </th>
+          <th>
+            <ul id="map-controls" style="float: right; margin-top:0;"></ul>
+          </th>
+        </tr>
+      </table>
     </div>
-    <div id="draw-controls" class="MapOptions">
-      <h4>Draw Controls</h4>
+    <div id="draw-controls" class="DrawOptions">
+      <h4 style="margin:0;">Draw Controls</h4>
       <ul id="draw-controls"></ul>
     </div>
     <script src="js/planetary/mapInstance.js"></script>
