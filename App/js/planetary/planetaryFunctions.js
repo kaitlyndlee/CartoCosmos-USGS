@@ -139,7 +139,7 @@ class GeometryHelper {
     // If the lon domain is 0-360, lon may become out of range
     // (e.g. since 270 * -1 = -270 gets outside the range)
     if(lon < -180.0) {
-      long += 360.0
+      lon += 360.0
     }
     return [lon, point[1]];
   }
@@ -182,6 +182,7 @@ class GeometryHelper {
     return [point[0], lat];
   }
 
+
   /*
    * Cleans up the WKT string by removing unnecessary whitespace from beginning and
    * end of string, as well as any whitespace between text and an opening parenthesis.
@@ -201,6 +202,7 @@ class GeometryHelper {
     // remove whitespace between geometry type and paren
     return wkt.replace(/\s+\(/g, "(");
   }
+
 
   /*
    * Warps a geometry by adding extra points along the edges. Helps to maintain
@@ -301,6 +303,7 @@ class GeometryHelper {
     }
   }
 
+
   /*
    * Extracts the geometry type from the WKT string. For example, if the WKT string is
    * 'POINT(7 10)', 'POINT' will be returned. Assumes the WKT has already been cleaned up
@@ -320,15 +323,16 @@ class GeometryHelper {
     return wkt.substring(0, prefixEnd);
   }
 
-/*
- * Fills an array of points, helps to maintain shapes on reprojections.
- *
- * Taken from AstroWebMaps
- *
- * @param {array} pointArray - array of points.
- * 
- * @return {array} array of new points.
- */
+
+  /*
+   * Fills an array of points, helps to maintain shapes on reprojections.
+   *
+   * Taken from AstroWebMaps
+   *
+   * @param {array} pointArray - array of points.
+   * 
+   * @return {array} array of new points.
+   */
   static saturatePointArray(pointArray) {
     var newPointArray = [];
     var n = 0;
