@@ -1,7 +1,7 @@
 /**
  * @fileOverview Contains the class GeometryHelper and JSON defining
  * proj4 strings to be used when instantiating a PlanetaryMap.
- * 
+ *
  * @author Kaitlyn Lee and Brandon Kindrick
  *
  * @history
@@ -11,14 +11,14 @@
 
 /*
  * Stores proj4 proj-strings for the different projections we support for each target.
- * Because MapServer, what we query to get the WMS tiles for the map, only accepts Earth 
- * codes, all projections are defined with Earth codes, but the rest of the proj-string 
- * is defined correctly for that target. 
+ * Because MapServer, what we query to get the WMS tiles for the map, only accepts Earth
+ * codes, all projections are defined with Earth codes, but the rest of the proj-string
+ * is defined correctly for that target.
  *
  * For example, the Mars north-polar stereographic projection is given the code EPSG:32661
  * but is defined with the correct radii 3396190 and 3396190 for Mars.
  */
-projectionDefs = {  
+projectionDefs = {
   "targets":[
     {
       "name": "mars",
@@ -74,7 +74,7 @@ projectionDefs = {
             "bottom": -60
           }
         }
-      ] 
+      ]
     }
   ]
 }

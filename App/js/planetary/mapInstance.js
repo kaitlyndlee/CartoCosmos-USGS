@@ -2,7 +2,7 @@
  * @fileOverview Creates the PlanetaryMap Object that contains the OL map and adds
  * selects and divs to the map for the user to switch the projection, target, lat type,
  * and lon domain and direction.
- * 
+ *
  * @author Kaitlyn Lee and Brandon Kindrick
  *
  * @history
@@ -10,8 +10,8 @@
  */
 
 createControls();
-var plantaryMap = new PlanetaryMap('mars', 'cylindrical');
-
+// parseWebAtlas();
+var planetaryMap = new PlanetaryMap('mars', 'cylindrical');
 
 /*
  * Creates divs for projections, lon directons, lon domains, and
@@ -19,11 +19,14 @@ var plantaryMap = new PlanetaryMap('mars', 'cylindrical');
  */
 function createControls() {
   var controlsDiv = document.getElementById('controls');
+  var mapOptions = document.getElementById("map-controls");
+  var drawOptions = document.getElementById("draw-controls");
 
   var projectionSelect = document.createElement("select");
   projectionSelect.id = "projSelect";
   projectionSelect.onchange = function(){switchProjection(projectionSelect.value);};
-  controlsDiv.appendChild(projectionSelect);
+  var projectionList = document.createElement("li");
+  mapOptions.appendChild(projectionList.appendChild(projectionSelect));
 
   var projOptions = ["Cylindrical", "North-polar Stereographic", "South-polar Stereographic"];
   for(var i = 0; i < projOptions.length; i++){
@@ -31,11 +34,13 @@ function createControls() {
     option.value = projOptions[i];
     option.text = projOptions[i];
     projectionSelect.appendChild(option);
+    projectionSelect.style.display = "none";
   }
 
   var lonDirectionSelect = document.createElement("select");
   lonDirectionSelect.id = "lonDirectionSelect";
-  controlsDiv.appendChild(lonDirectionSelect);
+  var lonDirList = document.createElement("li");
+  mapOptions.appendChild(lonDirList.appendChild(lonDirectionSelect));
 
   var directions = ["Positive East", "Positive West"];
   for(var i = 0; i < directions.length; i++){
@@ -47,7 +52,8 @@ function createControls() {
 
   var lonDomainSelect = document.createElement("select");
   lonDomainSelect.id = "lonDomainSelect";
-  controlsDiv.appendChild(lonDomainSelect);
+  var domainList = document.createElement("li");
+  mapOptions.appendChild(domainList.appendChild(lonDomainSelect));
 
   var domainsText = ["0\u00B0 to 360\u00B0", "-180\u00B0 to 180\u00B0\u00A0"];
   var domains = ["360", "180"];
@@ -60,7 +66,8 @@ function createControls() {
 
   var latSelect = document.createElement("select");
   latSelect.id = "latSelect";
-  controlsDiv.appendChild(latSelect);
+  var latList = document.createElement("li");
+  mapOptions.appendChild(latList.appendChild(latSelect));
 
   var latOptions = ["Planetocentric", "Planetographic"];
   for(var i = 0; i < latOptions.length; i++){
@@ -72,7 +79,8 @@ function createControls() {
 
   var drawShapeSelect = document.createElement("select");
   drawShapeSelect.id = "drawShapeDiv";
-  controlsDiv.appendChild(drawShapeSelect);
+  var drawSelectList = document.createElement("li");
+  drawOptions.appendChild(drawSelectList.appendChild(drawShapeSelect));
 
   var shapeWKTField = document.createElement("input");
   shapeWKTField.setAttribute("type", "text");
@@ -80,13 +88,13 @@ function createControls() {
   shapeWKTField.cols = 100;
   shapeWKTField.id = "polygonWKT";
   shapeWKTField.value = "WKT string";
-  shapeWKTField.size = 100;
+  shapeWKTField.size = 25;
   shapeWKTField.onkeyup = function(){
     if(event.key === 'Enter') {
-      plantaryMap.shapeDrawer.drawFromTextBox();       
+      planetaryMap.shapeDrawer.drawFromTextBox();
     }
   };
-  controlsDiv.appendChild(shapeWKTField);
+  var shapeList = document.createElement("li");
 
   var shapes = ["Box", "Polygon"];
   for(var i = 0; i < shapes.length; i++){
@@ -98,19 +106,23 @@ function createControls() {
 
   var drawShapeDiv = document.createElement("button");
   drawShapeDiv.innerHTML = "Draw Shape";
-  drawShapeDiv.onclick = function(){plantaryMap.shapeDrawer.draw(drawShapeSelect.value);};
-  controlsDiv.appendChild(drawShapeDiv);
- 
+  drawShapeDiv.onclick = function(){planetaryMap.shapeDrawer.draw(drawShapeSelect.value);};
+  var drawShapeList = document.createElement("li");
+  drawOptions.appendChild(drawShapeList.appendChild(drawShapeDiv));
+
   var removeShapeDiv = document.createElement("button");
   removeShapeDiv.id = "removeBoxDiv";
   removeShapeDiv.innerHTML = "Remove Shape";
-  removeShapeDiv.onclick = function(){plantaryMap.shapeDrawer.removeFeatures();};
-  controlsDiv.appendChild(removeShapeDiv);
+  removeShapeDiv.onclick = function(){planetaryMap.shapeDrawer.removeFeatures();};
+  var removeList = document.createElement("li");
+  drawOptions.appendChild(removeList.appendChild(removeShapeDiv));
 
   var lonLatTitle = document.createElement("div");
   lonLatTitle.className ='lonLatTitle';
   lonLatTitle.innerHTML = 'Lat Lon: &nbsp;';
   controlsDiv.appendChild(lonLatTitle);
+
+  drawOptions.appendChild(shapeList.appendChild(shapeWKTField));
 
   createLonLatDiv();
 }
@@ -147,5 +159,53 @@ function refreshLonLatDiv() {
  */
 function switchProjection(newProjection) {
   refreshLonLatDiv();
-  plantaryMap.switchProjection(newProjection);
+  planetaryMap.switchProjection(newProjection);
 }
+
+
+function disableProjection(proj) {
+  var projDiv = document.getElementById("projSelect").options;
+
+  switch(proj) {
+    case("north"):
+      projDiv[1].disabled = true;
+      break;
+
+    case("south"):
+      projDiv[2].disabled = true;
+      break;
+  }
+}
+
+
+function enableProjection(proj) {
+  var projDiv = document.getElementById("projSelect").options;
+
+  switch(proj) {
+    case("north"):
+      projDiv[1].disabled = false;
+      break;
+
+    case("south"):
+      projDiv[2].disabled = false;
+      break;
+  }
+}
+
+
+function checkProjections(layers) {
+  if(!layers["hasNorth"]) {
+    disableProjection("north");
+  } else {
+    enableProjection("north");
+  }
+
+  if(!layers["hasSouth"]) {
+    disableProjection("south");
+  } else {
+    enableProjection("south");
+  }
+}
+
+
+
