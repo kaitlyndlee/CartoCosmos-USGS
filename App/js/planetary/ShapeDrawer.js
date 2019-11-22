@@ -82,7 +82,7 @@ class ShapeDrawer {
         featureState.northPolarWKT = format.writeGeometry(geometryWarp, {decimals: 2});
       } 
       else if(projCode == 'EPSG:32761' && featureState.southPolarWKT == null) {
-        geometryWarp = geometryWarp.transform('EPSG:4326','EPSG:32761');
+        geometryWarp = geometryWarp.transform('EPSG:4326', 'EPSG:32761');
         featureState.southPolarWKT = format.writeGeometry(geometryWarp, {decimals: 2});
       }
     }
@@ -113,7 +113,13 @@ class ShapeDrawer {
 
     // draw feature
     this.source.addFeature(feature);
+
+    // When displaying the WKT, transform back to EPSG:4326
+    var geometry = format.readGeometry(currentWKT);
+    geometry = geometry.transform(projCode, 'EPSG:4326');
+    currentWKT = format.writeGeometry(geometry, {decimals: 2});
     document.getElementById('polygonWKT').value = currentWKT;
+
     return featureState;
   }
 
@@ -165,11 +171,12 @@ class ShapeDrawer {
 
 
   /*
-   * Stores the WKT in EPSG:4326 and saves the new shape. Called by
-   * this.draw().
+   * Transforms the WKT to EPSG:4326.
    *
    * @param {OL.Format.WKT} wkt - Well Known Text representing the 
    *                        feature to be saved and drawn.
+   *
+   * @return {OL.Format.WKT} WKT in EPSG:4326
    */
   transformGeometry(wkt) {
     // Save all wkt in cylindrical for easy projection switches
@@ -187,7 +194,6 @@ class ShapeDrawer {
 
     }
     return wkt;
-    // this.saveShape(wkt);
   }
 
   /*
@@ -236,7 +242,7 @@ class ShapeDrawer {
     }
     this.map.addInteraction(shapeDraw);
 
-    // Add snap intercation so that when a user click the "draw box" button
+    // Add snap interaction so that when a user clicks the "draw box" button
     // and wants to edit a shape on the map, only one interaction is shown 
     // by the cursor.
     var snap = new ol.interaction.Snap({source: this.source});
@@ -253,7 +259,6 @@ class ShapeDrawer {
 
     shapeDraw.on('drawend', function(event) {
       var wkt = format.writeFeature(event.feature);
-      // shapeDrawer.drawFromButton(wkt);
       wkt = shapeDrawer.transformGeometry(wkt);
       shapeDrawer.saveShape(wkt);
       shapeDrawer.map.removeInteraction(this);
