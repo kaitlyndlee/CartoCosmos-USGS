@@ -60,16 +60,25 @@
       function north() {
         document.getElementById("projSelect").selectedIndex = 1;
         document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole-hot.png";
+        document.getElementById("south").src = "images/south-pole.png";
+        document.getElementById("cylindrical").src = "images/cylindrical.png";
       }
 
       function cylindrical() {
         document.getElementById("projSelect").selectedIndex = 0;
         document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole.png";
+        document.getElementById("south").src = "images/south-pole.png";
+        document.getElementById("cylindrical").src = "images/cylindrical-hot.png";
       }
 
       function south() {
         document.getElementById("projSelect").selectedIndex = 2;
         document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole.png";
+        document.getElementById("south").src = "images/south-pole-hot.png";
+        document.getElementById("cylindrical").src = "images/cylindrical.png";
       }
     </script>
     <div id="map" class="map"></div>
@@ -81,7 +90,7 @@
           <th>
             <ul id="proj-list" style="margin-top:0;">
               <li><input id="north" type="image" src="images/north-pole.png" onclick="north()"></li>
-              <li><input id="cylindrical" type="image" src="images/cylindrical.png" onclick="cylindrical()"></li>
+              <li><input id="cylindrical" type="image" src="images/cylindrical-hot.png" onclick="cylindrical()"></li>
               <li><input id="south" type="image" src="images/south-pole.png" onclick="south()"></li>
             </ul>
           </th>
