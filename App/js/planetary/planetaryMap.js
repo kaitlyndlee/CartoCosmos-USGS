@@ -31,7 +31,7 @@ class PlanetaryMap {
     this.map = null;
     this.layers = null;
     this.shapeDrawer = new ShapeDrawer(null, null);;
-
+    this.geometryHelper = new GeometryHelper();
     this.parseWebAtlas();
     this.createMap();
   }
@@ -78,7 +78,7 @@ class PlanetaryMap {
   addControls() {
 
     var currentProj = this.projection;
-
+    var thisContext = this;
     // Uses the view projection by default to transform coordinates
     var mousePositionControl = new ol.control.MousePosition({
       // Every time the mouse is moved, this function is called and the
@@ -91,13 +91,13 @@ class PlanetaryMap {
         var latType = document.getElementById("latSelect");
 
         if(lonDirection.options[lonDirection.selectedIndex].value == 'Positive West') {
-          coordinate = GeometryHelper.transformLonDirection(coordinate);
+          coordinate = thisContext.geometryHelper.transformLonDirection(coordinate);
         }
         if(lonDomain.options[lonDomain.selectedIndex].value == '360') {
-          coordinate = GeometryHelper.transform180180To0360(coordinate);
+          coordinate = thisContext.geometryHelper.transform180180To0360(coordinate);
         }
         if (latType.options[latType.selectedIndex].value == 'Planetographic') {
-          coordinate = GeometryHelper.transformOcentricToOgraphic(coordinate);
+          coordinate = thisContext.geometryHelper.transformOcentricToOgraphic(coordinate);
         }
         return ol.coordinate.format(coordinate, '{y}, {x}', 4);
       },
@@ -181,8 +181,8 @@ class PlanetaryMap {
       var currentTarget = targets[i];
 
       if (currentTarget['name'].toLowerCase() == this.target) {
-        GeometryHelper.majorRadius = currentTarget['aaxisradius'];
-        GeometryHelper.minorRadius = currentTarget['caxisradius'];
+        this.geometryHelper.majorRadius = currentTarget['aaxisradius'];
+        this.geometryHelper.minorRadius = currentTarget['caxisradius'];
 
         var jsonLayers = currentTarget['webmap'];
         for(var j = 0; j < jsonLayers.length; j++) {

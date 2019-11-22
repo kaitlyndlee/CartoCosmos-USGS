@@ -61,7 +61,7 @@ class ShapeDrawer {
   drawFeature(wkt, featureState) {
     var projCode = this.map.getView().getProjection().getCode();
     // clean up WKT in case there is extra unnecessary whitespace
-    wkt = GeometryHelper.cleanWkt(wkt);
+    wkt = WKTEditor.cleanWkt(wkt);
 
     if(featureState.cylindricalWKT == null) {
       featureState.cylindricalWKT = wkt;
@@ -73,7 +73,7 @@ class ShapeDrawer {
     if(projCode != "EPSG:4326") {
       var geometry = format.readGeometry(featureState.cylindricalWKT);
       var polygon = format.writeGeometry(geometry, {decimals: 2});
-      var wktWarp = GeometryHelper.warpWkt(polygon);
+      var wktWarp = WKTEditor.warpWkt(polygon);
 
       // Read geometry so that we can transform back to the correct projection
       var geometryWarp = format.readGeometry(wktWarp);

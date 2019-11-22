@@ -84,28 +84,20 @@ projectionDefs = {
  * This utility class provides geometry helper methods such as converting
  * between ographic and ocentric latitudes. Refactored version of AstroWebMaps, our 
  * OpenLayers 4 implementation. 
- * 
- * Methods in this class need to be static because they are being used
- * in the MouseControl instantiation in PlanetaryMap. We cannot use "this" to refer to
- * the PlanetaryMap object inside of the MouseControl instantiation as "this" refers
- * to the mouse in that scope, not the map. Thus, there is no way to reference
- * a GeometryHelper PlanetaryMap member class variable in that scope.
- *
- * This class should never need to be instantiated because all methods may be called
- * statically. For example,
- *   GeometryHelper.transform180180To0360(...);
  */
 class GeometryHelper {
 
-  static majorRadius = null;
-  static minorRadius = null;
+  constructor() {
+    this.majorRadius = null;
+    this.minorRadius = null;
+  }
   
   /*
    * Converts coordinate from -180/180 to 0/360 lon domain.
    *
    * @param {array} point - 2D Array storing [lon, lat]
    */
-  static transform180180To0360(point) {
+  transform180180To0360(point) {
     var lon = point[0];
     lon -= 180;
     lon = ((360 + (lon % 360)) % 360);
@@ -118,7 +110,7 @@ class GeometryHelper {
    *
    * @param {array} point - 2D Array storing [lon, lat]
    */
-  static transform0360To180180(point) {
+  transform0360To180180(point) {
     var lon = point[0];
     if(lon > 180.0) {
         lon -= 360.0;
@@ -134,7 +126,7 @@ class GeometryHelper {
    *
    * @param {array} point - 2D Array storing [lon, lat]
    */
-  static transformLonDirection(point) {
+  transformLonDirection(point) {
     var lon = -1 * point[0];
 
     // If the lon domain is 0-360, lon may become out of range
@@ -152,11 +144,11 @@ class GeometryHelper {
    *
    * @param {array} point - 2D Array storing [lon, lat]
    */  
-  static transformOcentricToOgraphic(point) {
+  transformOcentricToOgraphic(point) {
     // Convert to radians
     var lat = point[1] * Math.PI / 180;
 
-    var squaredRatio = Math.pow((GeometryHelper.majorRadius / GeometryHelper.majorRadius), 2);
+    var squaredRatio = Math.pow((this.majorRadius / this.majorRadius), 2);
     lat = Math.atan(Math.tan(lat) * squaredRatio);
     
     // Convert back to degrees
@@ -171,18 +163,25 @@ class GeometryHelper {
    *
    * @param {array} point - 2D Array storing [lon, lat]
    */  
-  static transformOgraphicToOcentric(point) {
+  transformOgraphicToOcentric(point) {
     // Convert to radians
     var lat = point[1] * Math.PI / 180;
-
-    var squaredRatio = Math.pow((GeometryHelper.minorRadius / GeometryHelper.majorRadius), 2);
+    var squaredRatio = Math.pow((this.minorRadius / this.majorRadius), 2);
     lat = Math.atan(Math.tan(lat) * squaredRatio);
     
     // Convert back to degrees
     lat = newY * 180 / Math.PI;
     return [point[0], lat];
   }
+}
+  
 
+/*
+ * This utility class provides methods used to clean and warp WKT strings.
+ *
+ * All functions are static for ease of use.
+ */
+class WKTEditor{
 
   /*
    * Cleans up the WKT string by removing unnecessary whitespace from beginning and

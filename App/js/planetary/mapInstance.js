@@ -87,7 +87,6 @@ function createControls() {
   shapeWKTField.rows = 3;
   shapeWKTField.cols = 100;
   shapeWKTField.id = "polygonWKT";
-  shapeWKTField.value = "WKT string";
   shapeWKTField.size = 25;
   shapeWKTField.onkeyup = function(){
     if(event.key === 'Enter') {
