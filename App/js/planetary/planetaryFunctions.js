@@ -192,9 +192,9 @@ class GeometryHelper {
    *
    * Taken from AstroWebMaps
    *
-   * @param {ol.format.wkt} wkt - the wkt string to be cleaned.
+   * @param {String} wkt - the wkt string to be cleaned.
    * 
-   * @return {ol.format.wkt} the clean wkt string
+   * @return {String} the clean wkt string
    */
   static cleanWkt(wkt) {
     // trim
@@ -214,9 +214,9 @@ class GeometryHelper {
    *
    * Taken from AstroWebMaps
    *
-   * @param {ol.format.wkt} wkt - WKT to warp
+   * @param {String} wkt - WKT string to warp
    *
-   * @return {ol.format.wkt} the warped WKT
+   * @return {String} the warped WKT
    */
   static warpWkt(wkt) {
     // extract the geometry type (prefix)
@@ -312,9 +312,9 @@ class GeometryHelper {
    *
    * Taken from AstroWebMaps
    *
-   * @param {ol.format.wkt} wkt - the wkt string
+   * @param {String} wkt - the wkt string
    * 
-   * @return {ol.format.wkt} the geometry type string or null if bad WKT
+   * @return {String} the geometry type string or null if bad WKT
    */
   static extractGeometryType(wkt) {
     var prefixEnd = wkt.indexOf("(");
