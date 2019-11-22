@@ -107,6 +107,7 @@ class GeometryHelper {
    */
   static transform180180To0360(point) {
     var lon = point[0];
+    lon -= 180;
     lon = ((360 + (lon % 360)) % 360);
     return [lon, point[1]];
   } 
