@@ -31,6 +31,7 @@
 
       .MapOptions {
         width: 8%;
+        margin-top: 1%;
         background-color: #d9d9d9;
         float: left;
         border: solid;
@@ -38,8 +39,9 @@
 
       .DrawOptions {
         margin-left: 0px;
-        margin-right: 80%;
-        width: 10%;
+        margin-right: 55%;
+        margin-top: 1%;
+        width: 34%;
         background-color: #d9d9d9;
         float: right;
         border: solid;
@@ -48,66 +50,50 @@
       .projectionDiv {
         float: left;
       }
+
     </style>
     <title>Mars Map</title>
   </head>
   <body>
     <h2>Openlayers Map Example</h2>
-    <h3>Select Target</h3>
-    <select id="target-select"></select>
-    <br>
-<!--
-    <select id="target" onchange="switchTarget();"><option value="Europa">Europa</option><option value="Io">Io</option><option selected="selected" value="Mars">Mars</option><option value="Mercury">Mercury</option><option value="Moon">Moon</option>
-    <select> -->
     <script>
-      var layerSelect = document.getElementById("layer-select");
-      var targetSelect = document.getElementById("target-select");
-      var targets = [];
-      for(i=0; i<myJSONmaps['targets'].length; i++){
-        currentTarget = myJSONmaps['targets'][i]['name'];
-        //console.log(myJSONmaps['targets'][i]);
-        if(!targets.includes(currentTarget)){
-          targets.push(currentTarget);
-          targets = targets.sort();
-        }
-      }
-      for(j=0; j<targets.length; j++){
-        var currentOption = document.createElement("option");
-        currentOption.value = String(targets[j]);
-        currentOption.text = String(targets[j]);
-        // Set Mars to default
-        if(currentOption.value == "MARS"){
-          currentOption.selected = true;
-        }
-        targetSelect.add(currentOption);
-      }
     </script>
     <script>
       function north() {
         document.getElementById("projSelect").selectedIndex = 1;
         document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole-hot.png";
+        document.getElementById("south").src = "images/south-pole.png";
+        document.getElementById("cylindrical").src = "images/cylindrical.png";
       }
 
       function cylindrical() {
         document.getElementById("projSelect").selectedIndex = 0;
         document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole.png";
+        document.getElementById("south").src = "images/south-pole.png";
+        document.getElementById("cylindrical").src = "images/cylindrical-hot.png";
       }
 
       function south() {
         document.getElementById("projSelect").selectedIndex = 2;
         document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole.png";
+        document.getElementById("south").src = "images/south-pole-hot.png";
+        document.getElementById("cylindrical").src = "images/cylindrical.png";
       }
     </script>
     <div id="map" class="map"></div>
     <div id="controls"></div>
     <div id="map-options" class="MapOptions">
       <h4 style="margin-top:0;">Map Options</h4>
+      <div id="lat-lon-div"></div>
       <table>
         <tr>
           <th>
             <ul id="proj-list" style="margin-top:0;">
               <li><input id="north" type="image" src="images/north-pole.png" onclick="north()"></li>
-              <li><input id="cylindrical" type="image" src="images/cylindrical.png" onclick="cylindrical()"></li>
+              <li><input id="cylindrical" type="image" src="images/cylindrical-hot.png" onclick="cylindrical()"></li>
               <li><input id="south" type="image" src="images/south-pole.png" onclick="south()"></li>
             </ul>
           </th>

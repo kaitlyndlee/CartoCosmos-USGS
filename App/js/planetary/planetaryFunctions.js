@@ -82,65 +82,57 @@ projectionDefs = {
 
 /*
  * This utility class provides geometry helper methods such as converting
- * between ographic and ocentric latitudes. Refactored version of AstroWebMaps, our
- * OpenLayers 4 implementation.
- *
- * Methods in this class need to be static because they are being used
- * in the MouseControl instantiation in PlanetaryMap. We cannot use "this" to refer to
- * the PlanetaryMap object inside of the MouseControl instantiation as "this" refers
- * to the mouse in that scope, not the map. Thus, there is no way to reference
- * a GeometryHelper PlanetaryMap member class variable in that scope.
- *
- * This class should never need to be instantiated because all methods may be called
- * statically. For example,
- *   GeometryHelper.transform180180To0360(...);
+ * between ographic and ocentric latitudes. Refactored version of AstroWebMaps, our 
+ * OpenLayers 4 implementation. 
  */
 class GeometryHelper {
 
-  static majorRadius = null;
-  static minorRadius = null;
-
+  constructor() {
+    this.majorRadius = null;
+    this.minorRadius = null;
+  }
+  
   /*
    * Converts coordinate from -180/180 to 0/360 lon domain.
    *
    * @param {array} point - 2D Array storing [lon, lat]
    */
-  static transform180180To0360(point) {
+  transform180180To0360(point) {
     var lon = point[0];
-    lon = lon-180;
+    lon -= 180;
     lon = ((360 + (lon % 360)) % 360);
     return [lon, point[1]];
-  }
-
+  } 
+  
 
   /*
    * Converts coordinate from 0/360 to -180/180 lon domain.
    *
    * @param {array} point - 2D Array storing [lon, lat]
    */
-  static transform0360To180180(point) {
+  transform0360To180180(point) {
     var lon = point[0];
     if(lon > 180.0) {
         lon -= 360.0;
     }
     return [lon, point[1]];
   }
-
+  
 
   /*
    * Converts coordinate from positive east to
-   * positive west and vice versa.
+   * positive west and vice versa. 
    * This operation is reversible.
    *
    * @param {array} point - 2D Array storing [lon, lat]
    */
-  static transformLonDirection(point) {
+  transformLonDirection(point) {
     var lon = -1 * point[0];
 
     // If the lon domain is 0-360, lon may become out of range
     // (e.g. since 270 * -1 = -270 gets outside the range)
     if(lon < -180.0) {
-      long += 360.0
+      lon += 360.0
     }
     return [lon, point[1]];
   }
@@ -151,37 +143,45 @@ class GeometryHelper {
    * to planetographic lat.
    *
    * @param {array} point - 2D Array storing [lon, lat]
-   */
-  static transformOcentricToOgraphic(point) {
+   */  
+  transformOcentricToOgraphic(point) {
     // Convert to radians
     var lat = point[1] * Math.PI / 180;
 
-    var squaredRatio = Math.pow((GeometryHelper.majorRadius / GeometryHelper.majorRadius), 2);
+    var squaredRatio = Math.pow((this.majorRadius / this.majorRadius), 2);
     lat = Math.atan(Math.tan(lat) * squaredRatio);
-
+    
     // Convert back to degrees
     lat = lat * 180 / Math.PI;
     return [point[0], lat];
-  }
-
+  } 
+  
 
   /*
    * Converts coordinate from planetographic lat
    * to planetocentric lat.
    *
    * @param {array} point - 2D Array storing [lon, lat]
-   */
-  static transformOgraphicToOcentric(point) {
+   */  
+  transformOgraphicToOcentric(point) {
     // Convert to radians
     var lat = point[1] * Math.PI / 180;
-
-    var squaredRatio = Math.pow((GeometryHelper.minorRadius / GeometryHelper.majorRadius), 2);
+    var squaredRatio = Math.pow((this.minorRadius / this.majorRadius), 2);
     lat = Math.atan(Math.tan(lat) * squaredRatio);
-
+    
     // Convert back to degrees
     lat = newY * 180 / Math.PI;
     return [point[0], lat];
   }
+}
+  
+
+/*
+ * This utility class provides methods used to clean and warp WKT strings.
+ *
+ * All functions are static for ease of use.
+ */
+class WKTEditor{
 
   /*
    * Cleans up the WKT string by removing unnecessary whitespace from beginning and
@@ -191,9 +191,9 @@ class GeometryHelper {
    *
    * Taken from AstroWebMaps
    *
-   * @param {ol.format.wkt} wkt - the wkt string to be cleaned.
-   *
-   * @return {ol.format.wkt} the clean wkt string
+   * @param {String} wkt - the wkt string to be cleaned.
+   * 
+   * @return {String} the clean wkt string
    */
   static cleanWkt(wkt) {
     // trim
@@ -202,6 +202,7 @@ class GeometryHelper {
     // remove whitespace between geometry type and paren
     return wkt.replace(/\s+\(/g, "(");
   }
+
 
   /*
    * Warps a geometry by adding extra points along the edges. Helps to maintain
@@ -212,9 +213,9 @@ class GeometryHelper {
    *
    * Taken from AstroWebMaps
    *
-   * @param {ol.format.wkt} wkt - WKT to warp
+   * @param {String} wkt - WKT string to warp
    *
-   * @return {ol.format.wkt} the warped WKT
+   * @return {String} the warped WKT
    */
   static warpWkt(wkt) {
     // extract the geometry type (prefix)
@@ -269,7 +270,7 @@ class GeometryHelper {
         if (points.length <= 16) {
           var newPoints = this.saturatePointArray(pointsF);
           polyArray[i] = "((" + newPoints.join() + "))";
-        }
+        } 
         else {
           polyArray[i] = "((" + pointsF.join() + "))";
         }
@@ -302,6 +303,7 @@ class GeometryHelper {
     }
   }
 
+
   /*
    * Extracts the geometry type from the WKT string. For example, if the WKT string is
    * 'POINT(7 10)', 'POINT' will be returned. Assumes the WKT has already been cleaned up
@@ -309,9 +311,9 @@ class GeometryHelper {
    *
    * Taken from AstroWebMaps
    *
-   * @param {ol.format.wkt} wkt - the wkt string
-   *
-   * @return {ol.format.wkt} the geometry type string or null if bad WKT
+   * @param {String} wkt - the wkt string
+   * 
+   * @return {String} the geometry type string or null if bad WKT
    */
   static extractGeometryType(wkt) {
     var prefixEnd = wkt.indexOf("(");
@@ -321,15 +323,16 @@ class GeometryHelper {
     return wkt.substring(0, prefixEnd);
   }
 
-/*
- * Fills an array of points, helps to maintain shapes on reprojections.
- *
- * Taken from AstroWebMaps
- *
- * @param {array} pointArray - array of points.
- *
- * @return {array} array of new points.
- */
+
+  /*
+   * Fills an array of points, helps to maintain shapes on reprojections.
+   *
+   * Taken from AstroWebMaps
+   *
+   * @param {array} pointArray - array of points.
+   * 
+   * @return {array} array of new points.
+   */
   static saturatePointArray(pointArray) {
     var newPointArray = [];
     var n = 0;
@@ -388,3 +391,4 @@ class GeometryHelper {
     return (newPointArray);
   }
 }
+

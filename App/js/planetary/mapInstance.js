@@ -10,6 +10,7 @@
  */
 
 createControls();
+// parseWebAtlas();
 var planetaryMap = new PlanetaryMap('mars', 'cylindrical');
 
 /*
@@ -24,7 +25,6 @@ function createControls() {
   var projectionSelect = document.createElement("select");
   projectionSelect.id = "projSelect";
   projectionSelect.onchange = function(){switchProjection(projectionSelect.value);};
-  //controlsDiv.appendChild(projectionSelect);
   var projectionList = document.createElement("li");
   mapOptions.appendChild(projectionList.appendChild(projectionSelect));
 
@@ -37,20 +37,8 @@ function createControls() {
     projectionSelect.style.display = "none";
   }
 
-  /*
-  var container = document.createElement("li");
-  var north = document.createElement("input");
-  //north.type = "button";
-  north.src = "images/north-pole.png";
-  north.value = "North";
-  //north.onclick = console.log("hello");
-  container.appendChild(north);
-  projList.appendChild(container);
-*/
-
   var lonDirectionSelect = document.createElement("select");
   lonDirectionSelect.id = "lonDirectionSelect";
-  //controlsDiv.appendChild(lonDirectionSelect);
   var lonDirList = document.createElement("li");
   mapOptions.appendChild(lonDirList.appendChild(lonDirectionSelect));
 
@@ -64,7 +52,6 @@ function createControls() {
 
   var lonDomainSelect = document.createElement("select");
   lonDomainSelect.id = "lonDomainSelect";
-  //controlsDiv.appendChild(lonDomainSelect);
   var domainList = document.createElement("li");
   mapOptions.appendChild(domainList.appendChild(lonDomainSelect));
 
@@ -79,7 +66,6 @@ function createControls() {
 
   var latSelect = document.createElement("select");
   latSelect.id = "latSelect";
-  //controlsDiv.appendChild(latSelect);
   var latList = document.createElement("li");
   mapOptions.appendChild(latList.appendChild(latSelect));
 
@@ -93,23 +79,20 @@ function createControls() {
 
   var drawShapeSelect = document.createElement("select");
   drawShapeSelect.id = "drawShapeDiv";
-  //controlsDiv.appendChild(drawShapeSelect);
   var drawSelectList = document.createElement("li");
   drawOptions.appendChild(drawSelectList.appendChild(drawShapeSelect));
 
-  var shapeWKTField = document.createElement("input");
-  shapeWKTField.setAttribute("type", "text");
+  var shapeWKTField = document.createElement("TextArea");
+  // shapeWKTField.setAttribute("type", "text");
   shapeWKTField.rows = 3;
   shapeWKTField.cols = 100;
   shapeWKTField.id = "polygonWKT";
-  shapeWKTField.value = "WKT string";
   shapeWKTField.size = 25;
   shapeWKTField.onkeyup = function(){
     if(event.key === 'Enter') {
       planetaryMap.shapeDrawer.drawFromTextBox();
     }
   };
-  //controlsDiv.appendChild(shapeWKTField);
   var shapeList = document.createElement("li");
 
   var shapes = ["Box", "Polygon"];
@@ -123,7 +106,6 @@ function createControls() {
   var drawShapeDiv = document.createElement("button");
   drawShapeDiv.innerHTML = "Draw Shape";
   drawShapeDiv.onclick = function(){planetaryMap.shapeDrawer.draw(drawShapeSelect.value);};
-  //controlsDiv.appendChild(drawShapeDiv);
   var drawShapeList = document.createElement("li");
   drawOptions.appendChild(drawShapeList.appendChild(drawShapeDiv));
 
@@ -131,14 +113,13 @@ function createControls() {
   removeShapeDiv.id = "removeBoxDiv";
   removeShapeDiv.innerHTML = "Remove Shape";
   removeShapeDiv.onclick = function(){planetaryMap.shapeDrawer.removeFeatures();};
-  //controlsDiv.appendChild(removeShapeDiv);
   var removeList = document.createElement("li");
   drawOptions.appendChild(removeList.appendChild(removeShapeDiv));
 
   var lonLatTitle = document.createElement("div");
   lonLatTitle.className ='lonLatTitle';
   lonLatTitle.innerHTML = 'Lat Lon: &nbsp;';
-  controlsDiv.appendChild(lonLatTitle);
+  document.getElementById("lat-lon-div").appendChild(lonLatTitle);
 
   drawOptions.appendChild(shapeList.appendChild(shapeWKTField));
 
@@ -150,7 +131,7 @@ function createControls() {
  * Creates div for displaying the current lon lat.
  */
 function createLonLatDiv() {
-  var controlsDiv = document.getElementById('controls');
+  var controlsDiv = document.getElementById('lat-lon-div');
   var lonLatDiv = document.createElement("div");
   lonLatDiv.className ='lonLatMouseControl';
   lonLatDiv.id = "lonLat"
@@ -162,7 +143,7 @@ function createLonLatDiv() {
  * Deletes and recreates the lon lat div.
  */
 function refreshLonLatDiv() {
-  var controlsDiv = document.getElementById('controls');
+  var controlsDiv = document.getElementById('lat-lon-div');
   var lonLatDiv = document.getElementById('lonLat');
   controlsDiv.removeChild(lonLatDiv);
   createLonLatDiv();
@@ -179,22 +160,6 @@ function switchProjection(newProjection) {
   refreshLonLatDiv();
   planetaryMap.switchProjection(newProjection);
 }
-
-// TODO Change this?
-function parseWebAtlas() {
-  var targets = [];
-
-  var json = myJSONmaps['targets'];
-  for(var i = 0; i < json.length; i++) {
-    var currentTarget = String(json[i]);
-
-    if(!targets.includes(currentTarget)){
-      targets.push(String(currentTarget));
-      targets = targets.sort();
-    }
-  }
-}
-parseWebAtlas();
 
 
 function disableProjection(proj) {
@@ -239,29 +204,4 @@ function checkProjections(layers) {
   } else {
     enableProjection("south");
   }
-}
-
-//createControls();
-
-var targetSelect = document.getElementById("target-select");
-var targetSelectValue = targetSelect.value;
-var projSelect = document.getElementById("projSelect");
-var projSelectValue = projSelect.value;
-//checkProjections(planetaryMap.layers);
-
-
-function switchTarget(target) {
-  planetaryMap.destroy();
-  planetaryMap.target = target;
-  planetaryMap.createMap(planetaryMap.parseWebAtlas());
-  //checkProjections(planetaryMap.layers);
-  //planetaryMap.switchProjection(String(projSelectValue));
-}
-
-targetSelect.onchange = function() {
-  var target = String(targetSelect.options[targetSelect.selectedIndex].text).toLowerCase();
-  document.getElementById("projSelect").options[0].selected = true;
-  document.getElementById("projSelect").onchange();
-  switchTarget(target);
-  //planetaryMap.map.getView().getProjection());
 }

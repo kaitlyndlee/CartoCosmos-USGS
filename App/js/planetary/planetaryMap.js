@@ -26,25 +26,22 @@ class PlanetaryMap {
   constructor(target, projection) {
     this.mapID = 'map'
     this.target = target;
-    this.view = null;
     this.projName = projection;
-    this.projection = null;
+    this.projection = null;   // Stores proj code
     this.map = null;
-    this.zoom = null;
     this.layers = null;
     this.shapeDrawer = new ShapeDrawer(null, null);;
-    this.vectorSource = null;
-
+    this.geometryHelper = new GeometryHelper();
     this.parseWebAtlas();
     this.createMap();
   }
-
+ 
 
   /**
-   * Creates the OL Map instance by creating a projection with Proj4js, a
+   * Creates the OL Map instance by creating a projection with Proj4js, a 
    * map view, base layer and overlay groups, and map controls.
-   *
-   *
+   *  
+   * 
    * @param {object} layers - Key-Value pair of base layers and overlays to be
    *                          added to the map.
    */
@@ -52,7 +49,7 @@ class PlanetaryMap {
 
     this.createProjection();
 
-    this.view = new ol.View({
+    var view = new ol.View({
       projection: this.projection,
       center: [0, 0],
       zoom: 3,
@@ -64,9 +61,10 @@ class PlanetaryMap {
 
     this.map = new ol.Map({
       target: this.mapID,
-      view: this.view,
+      view: view,
       layers: mapLayers
     });
+
     this.shapeDrawer.setMap(this.map);
 
     this.addControls();
@@ -78,35 +76,31 @@ class PlanetaryMap {
    * and adds them to the OL map.
    */
   addControls() {
-    var current = this.projection;
+
+    var currentProj = this.projection;
+    var thisContext = this;
     // Uses the view projection by default to transform coordinates
     var mousePositionControl = new ol.control.MousePosition({
       // Every time the mouse is moved, this function is called and the
       // lat lon are recalculated.
       coordinateFormat: function(coordinate) {
-        if(current == "EPSG:32661") {
-          coordinate = ol.proj.transform(coordinate, "EPSG:32661", "EPSG:4326");
-        }
-
-        if(current == "EPSG:32761") {
-          coordinate = ol.proj.transform(coordinate, "EPSG:32761", "EPSG:4326");
-        }
+        coordinate = ol.proj.transform(coordinate, currentProj, "EPSG:4326");
 
         var lonDirection = document.getElementById("lonDirectionSelect");
         var lonDomain = document.getElementById("lonDomainSelect");
         var latType = document.getElementById("latSelect");
 
         if(lonDirection.options[lonDirection.selectedIndex].value == 'Positive West') {
-          coordinate = GeometryHelper.transformLonDirection(coordinate);
+          coordinate = thisContext.geometryHelper.transformLonDirection(coordinate);
         }
         if(lonDomain.options[lonDomain.selectedIndex].value == '360') {
-          coordinate = GeometryHelper.transform180180To0360(coordinate);
+          coordinate = thisContext.geometryHelper.transform180180To0360(coordinate);
         }
         if (latType.options[latType.selectedIndex].value == 'Planetographic') {
-          coordinate = GeometryHelper.transformOcentricToOgraphic(coordinate);
+          coordinate = thisContext.geometryHelper.transformOcentricToOgraphic(coordinate);
         }
         return ol.coordinate.format(coordinate, '{y}, {x}', 4);
-        },
+      },
       className: 'lonLatMouseControl',
       target: document.getElementById('lonLat'),
       undefinedHTML: '&nbsp;'
@@ -148,6 +142,7 @@ class PlanetaryMap {
     // There might be a better way to do this
     var drawShape = new ol.layer.Vector({
       source: vectorSource,
+      // extent: [0,-90, 360, 90],
       style: new ol.style.Style({
         fill: new ol.style.Fill({
          color: "rgba(0, 0, 0, 0)"
@@ -163,13 +158,13 @@ class PlanetaryMap {
     this.map.addControl(mousePositionControl);
     this.map.addControl(scaleLine);
     this.map.addControl(layerSwitcher);
+
   }
 
 
   /**
    * Parses WebAtlas JSON that contains data on each layer separated by target.
    * Adds JSON layer to correct key-value pair to be used in createMap.
-   *
    *
    * @return {object} Key-Value pair of base layers and overlays to be
    *                          added to the map.
@@ -186,8 +181,8 @@ class PlanetaryMap {
       var currentTarget = targets[i];
 
       if (currentTarget['name'].toLowerCase() == this.target) {
-        GeometryHelper.majorRadius = currentTarget['aaxisradius'];
-        GeometryHelper.minorRadius = currentTarget['caxisradius'];
+        this.geometryHelper.majorRadius = currentTarget['aaxisradius'];
+        this.geometryHelper.minorRadius = currentTarget['caxisradius'];
 
         var jsonLayers = currentTarget['webmap'];
         for(var j = 0; j < jsonLayers.length; j++) {
@@ -319,68 +314,67 @@ class PlanetaryMap {
         }
       }
 
-      var overlays = [];
-      for(var i = 0; i < this.layers['overlays'].length; i++) {
-        var currentLayer = this.layers['overlays'][i];
+    var overlays = [];
+    for(var i = 0; i < this.layers['overlays'].length; i++) {
+      var currentLayer = this.layers['overlays'][i];
 
-        var computedMaxResolution = (360 / 256);
-        // Set to true for now
-        var wrapCheck = true;
-        if (currentLayer['units'] == 'm') {
-          wrapCheck = false;
-          computedMaxResolution = 20000;
-        }
-
-        if(currentLayer['projection'].toLowerCase() == this.projName.toLowerCase()) {
-          var overlay = new ol.layer.Tile({
-            title: currentLayer['displayname'],
-            visible: false,
-            maxResolution: computedMaxResolution,
-            enableOpacitySliders: true,
-            source: new ol.source.TileWMS({
-              url: currentLayer['url'],
-              params: {
-                'LAYERS': currentLayer['layer'],
-                'MAP': currentLayer['map']},
-              serverType: 'mapserver',
-              crossOrigin: 'anonymous',
-              wrapX: wrapCheck
-            })
-          });
-          overlays.push(overlay);
-        }
+      var computedMaxResolution = (360 / 256);
+      // Set to true for now
+      var wrapCheck = true;
+      if (currentLayer['units'] == 'm') {
+        wrapCheck = false;
+        computedMaxResolution = 20000;
       }
 
-          // var wfs = layers['wfs'];
-      // for(var i = 0; i < wfs.length; i++) {
+      if(currentLayer['projection'].toLowerCase() == this.projName.toLowerCase()) {
+        var overlay = new ol.layer.Tile({
+          title: currentLayer['displayname'],
+          visible: false,
+          maxResolution: computedMaxResolution,
+          enableOpacitySliders: true,
+          source: new ol.source.TileWMS({
+            url: currentLayer['url'],
+            params: { 
+              'LAYERS': currentLayer['layer'],
+              'MAP': currentLayer['map']},
+            serverType: 'mapserver',
+            crossOrigin: 'anonymous',
+            wrapX: wrapCheck
+          })
+        });
+        overlays.push(overlay);
+      }
+    }
 
-      //   var extent = [
-      //         currentLayer['bounds']['left'],
-      //         currentLayer['bounds']['bottom'],
-      //         currentLayer['bounds']['right'],
-      //         currentLayer['bounds']['top']
-      //   ];
-      //   var wfsSource = new ol.source.Vector({
-      //     format: new ol.format.GeoJSON(),
-      //     url: 'https://astrocloud.wr.usgs.gov/dataset/data/nomenclature/' +
-      //       currentTarget['name'].toUpperCase() + '/WFS?service=WFS&version=1.1.0&request=GetFeature&' +
-      //       'outputFormat=application/json&srsname=EPSG:4326&' +
-      //       'bbox=' + extent.join(',') + ',EPSG:4326',
-      //     serverType: 'geoserver',
-      //     crossOrigin: 'anonymous',
-      //     strategy: ol.loadingstrategy.bbox
-      //   });
-      //   var wfs = new ol.layer.Vector({
-      //     source: wfsSource,
-      //     style: new ol.style.Style({
-      //       stroke: new ol.style.Stroke({
-      //         color: 'rgba(0, 0, 255, 1.0)',
-      //         width: 2
-      //       })
-      //     })
-      //   });
-      //   this.map.addOverlay(wfs);
-      // }
+    if(this.projection == "EPSG:4326") {
+      var thisContext = this;
+      for(var i = 0; i < this.layers['wfs'].length; i++) {
+        var currentLayer = this.layers['wfs'][i];
+        var wfsSource = new ol.source.Vector({
+          format: new ol.format.GeoJSON(),
+          url: function(extent) { 
+            return 'https://astrocloud.wr.usgs.gov/dataset/data/nomenclature/' +
+            thisContext.target.toUpperCase() + '/WFS?service=WFS&version=1.1.0&request=GetFeature&' +
+            'outputFormat=application/json&srsname=' + thisContext.projection + '&' +
+            'bbox=' + extent.join(',') + ',' + thisContext.projection;
+          },
+          serverType: 'geoserver',
+          crossOrigin: 'anonymous',
+          strategy: ol.loadingstrategy.bbox
+        });
+        var wfsOverlay = new ol.layer.Vector({
+          title: 'WFS',
+          source: wfsSource,
+          style: new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: 'rgba(0, 0, 255, 1.0)',
+              width: 2
+            })
+          })
+        });
+        overlays.push(wfsOverlay);
+      }
+    }  
 
     var baseLayerGroup = new ol.layer.Group({
       'title': 'Base maps',
