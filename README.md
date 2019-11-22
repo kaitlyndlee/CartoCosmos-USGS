@@ -27,4 +27,4 @@ In the bottom left of the map, you should see a menu called Draw Options.
 
 ![Menu Options Example](images/examples/draw_menu_example.png?raw=true "Layer Selector Example")
 
-This menu allows you to draw footprints onto the map as either a box or a polygon. The drop down menu allows you to choose which draw style you would like to use. The Button labeled "Draw Shape" will enable drawing on the map. Finally the "Remove Shape" button deletes the current drawing on the map. 
+This menu allows you to draw footprints onto the map as either a box or a polygon. The drop down menu allows you to choose which draw style you would like to use. The Button labeled "Draw Shape" will enable drawing on the map. Finally the "Remove Shape" button deletes the current drawing on the map. The large text area at the bottom of the menu displays the WKT (Well Known Text) form of the polygon or box that is drawn onto the map. The values can be edited on the fly in this area.
