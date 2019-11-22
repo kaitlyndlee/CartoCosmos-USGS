@@ -82,8 +82,8 @@ function createControls() {
   var drawSelectList = document.createElement("li");
   drawOptions.appendChild(drawSelectList.appendChild(drawShapeSelect));
 
-  var shapeWKTField = document.createElement("input");
-  shapeWKTField.setAttribute("type", "text");
+  var shapeWKTField = document.createElement("TextArea");
+  // shapeWKTField.setAttribute("type", "text");
   shapeWKTField.rows = 3;
   shapeWKTField.cols = 100;
   shapeWKTField.id = "polygonWKT";

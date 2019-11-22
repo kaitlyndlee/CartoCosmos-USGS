@@ -204,6 +204,8 @@ class ShapeDrawer {
    */
   drawFromTextBox() {
     var wkt = document.getElementById("polygonWKT").value;
+    // Remove any newline chars
+    wkt = wkt.replace(/\n\r?/g, '');
     if(wkt) {
       this.removeFeatures();
       wkt = this.transformGeometry(wkt);
