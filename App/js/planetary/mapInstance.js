@@ -119,7 +119,7 @@ function createControls() {
   var lonLatTitle = document.createElement("div");
   lonLatTitle.className ='lonLatTitle';
   lonLatTitle.innerHTML = 'Lat Lon: &nbsp;';
-  controlsDiv.appendChild(lonLatTitle);
+  document.getElementById("lat-lon-div").appendChild(lonLatTitle);
 
   drawOptions.appendChild(shapeList.appendChild(shapeWKTField));
 
@@ -131,7 +131,7 @@ function createControls() {
  * Creates div for displaying the current lon lat.
  */
 function createLonLatDiv() {
-  var controlsDiv = document.getElementById('controls');
+  var controlsDiv = document.getElementById('lat-lon-div');
   var lonLatDiv = document.createElement("div");
   lonLatDiv.className ='lonLatMouseControl';
   lonLatDiv.id = "lonLat"
@@ -143,7 +143,7 @@ function createLonLatDiv() {
  * Deletes and recreates the lon lat div.
  */
 function refreshLonLatDiv() {
-  var controlsDiv = document.getElementById('controls');
+  var controlsDiv = document.getElementById('lat-lon-div');
   var lonLatDiv = document.getElementById('lonLat');
   controlsDiv.removeChild(lonLatDiv);
   createLonLatDiv();
@@ -205,6 +205,3 @@ function checkProjections(layers) {
     enableProjection("south");
   }
 }
-
-
-
