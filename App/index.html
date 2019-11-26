@@ -4,6 +4,7 @@
     <meta charset="UTF-8"></meta>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css" type="text/css">
     <link rel="stylesheet" href="js/ol-layerswitcher/dist/ol-layerswitcher.css" type="text/css">
+    <!-- <link rel="stylesheet" type="text/css" href="/css/main.css"> -->
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="js/proj4js/dist/proj4.js"></script>
@@ -11,6 +12,7 @@
     <script src="js/ol-layerswitcher/dist/ol-layerswitcher.js"></script>
     <script src="js/planetary/planetaryFunctions.js"></script>
     <script src="js/planetary/planetaryMap.js"></script>
+    <script src="js/planetary/ShapeDrawer.js"></script>
 
     <!-- Constains JSON with target and projection information -->
     <script src="https://astrowebmaps.wr.usgs.gov/webmapatlas/Layers/maps.js"></script>
@@ -18,23 +20,93 @@
     <style>
       .map {
         height: 800px;
-        width: 50%;
+        width: 100%;
+        border: solid;
       }
-      .ol-mouse-position {
-        background: rgba(0,60,136,.3);
-        top: 8px;
-        right: 8px;
-        position: absolute;
-        color: #eee;
-        border-radius: 4px;
+
+      ul {
+        list-style-type: none;
+        padding-left: 0px;
       }
+
+      .MapOptions {
+        width: 8%;
+        margin-top: 1%;
+        background-color: #d9d9d9;
+        float: left;
+        border: solid;
+      }
+
+      .DrawOptions {
+        margin-left: 0px;
+        margin-right: 55%;
+        margin-top: 1%;
+        width: 34%;
+        background-color: #d9d9d9;
+        float: right;
+        border: solid;
+      }
+
+      .projectionDiv {
+        float: left;
+      }
+
     </style>
     <title>Mars Map</title>
   </head>
   <body>
-    <h2>Mars Map</h2>
+    <h2>Openlayers Map Example</h2>
+    <script>
+    </script>
+    <script>
+      function north() {
+        document.getElementById("projSelect").selectedIndex = 1;
+        document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole-hot.png";
+        document.getElementById("south").src = "images/south-pole.png";
+        document.getElementById("cylindrical").src = "images/cylindrical.png";
+      }
+
+      function cylindrical() {
+        document.getElementById("projSelect").selectedIndex = 0;
+        document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole.png";
+        document.getElementById("south").src = "images/south-pole.png";
+        document.getElementById("cylindrical").src = "images/cylindrical-hot.png";
+      }
+
+      function south() {
+        document.getElementById("projSelect").selectedIndex = 2;
+        document.getElementById("projSelect").onchange();
+        document.getElementById("north").src = "images/north-pole.png";
+        document.getElementById("south").src = "images/south-pole-hot.png";
+        document.getElementById("cylindrical").src = "images/cylindrical.png";
+      }
+    </script>
     <div id="map" class="map"></div>
-    <div id="mouse-position"></div>
+    <div id="controls"></div>
+    <div id="map-options" class="MapOptions">
+      <h4 style="margin-top:0;">Map Options</h4>
+      <div id="lat-lon-div"></div>
+      <table>
+        <tr>
+          <th>
+            <ul id="proj-list" style="margin-top:0;">
+              <li><input id="north" type="image" src="images/north-pole.png" onclick="north()"></li>
+              <li><input id="cylindrical" type="image" src="images/cylindrical-hot.png" onclick="cylindrical()"></li>
+              <li><input id="south" type="image" src="images/south-pole.png" onclick="south()"></li>
+            </ul>
+          </th>
+          <th>
+            <ul id="map-controls" style="float: right; margin-top:0;"></ul>
+          </th>
+        </tr>
+      </table>
+    </div>
+    <div id="draw-controls" class="DrawOptions">
+      <h4 style="margin:0;">Draw Controls</h4>
+      <ul id="draw-controls"></ul>
+    </div>
     <script src="js/planetary/mapInstance.js"></script>
   </body>
 </html>
