@@ -30,6 +30,7 @@ class PlanetaryMap {
     this.projection = null;   // Stores proj code
     this.map = null;
     this.layers = null;
+    this.footprintLayers = [];
     this.shapeDrawer = new ShapeDrawer(null, null);;
     this.geometryHelper = new GeometryHelper();
     this.parseWebAtlas();
@@ -52,7 +53,7 @@ class PlanetaryMap {
     var view = new ol.View({
       projection: this.projection,
       center: [0, 0],
-      zoom: 3,
+      zoom: 8,
       minZoom:2,
       maxZoom:10
     });
@@ -64,7 +65,7 @@ class PlanetaryMap {
       view: view,
       layers: mapLayers
     });
-
+  
     this.shapeDrawer.setMap(this.map);
 
     this.addControls();
@@ -155,10 +156,28 @@ class PlanetaryMap {
     });
     this.map.addLayer(drawShape);
 
+    // Add listener to change style of footprints when clicked
+    var select = new ol.interaction.Select({
+      layers: this.footprintLayers,
+      style: new ol.style.Style({
+        fill: new ol.style.Fill({
+         color: "rgba(255, 255, 0, .25)"
+        }),
+        stroke: new ol.style.Stroke({
+          color: 'rgba(255, 255, 0, 1.0)',
+          width: 2
+        })
+      })
+    });
+    this.map.addInteraction(select);
+    var selectedFeatures = select.getFeatures();
+    selectedFeatures.on('add', function(event) {
+      console.log(event.element.values_.solarlongitude);
+    });
+
     this.map.addControl(mousePositionControl);
     this.map.addControl(scaleLine);
     this.map.addControl(layerSwitcher);
-
   }
 
 
@@ -307,7 +326,7 @@ class PlanetaryMap {
                 'MAP': currentLayer['map']},
               serverType: 'mapserver',
               crossOrigin: 'anonymous',
-              wrapX: wrapCheck
+              wrapX: false
             })
           });
           baseLayers.push(baseLayer);
@@ -339,41 +358,103 @@ class PlanetaryMap {
               'MAP': currentLayer['map']},
             serverType: 'mapserver',
             crossOrigin: 'anonymous',
-            wrapX: wrapCheck
+            wrapX: false
           })
         });
         overlays.push(overlay);
       }
     }
-
+    
     if(this.projection == "EPSG:4326") {
       var thisContext = this;
-      for(var i = 0; i < this.layers['wfs'].length; i++) {
-        var currentLayer = this.layers['wfs'][i];
-        var wfsSource = new ol.source.Vector({
+      var sliderMin = document.getElementById("solarLongMin").value;
+      var sliderMax = document.getElementById("solarLongMax").value;
+      console.log(sliderMin + " " + sliderMax);
+      var ctxSource = new ol.source.Vector({
+        format: new ol.format.GeoJSON(),
+        url: function(extent) { 
+          return "https://astro-geoserver.wr.usgs.gov/geoserver/upc/ows?service=WFS&version=1.0.0&srs=EPSG%3A4326"
+                 + "&request=GetFeature&typeName=upc%3Actx_mars&outputFormat=application%2Fjson&maxFeatures=200"
+                 + `&CQL_FILTER=solarlongitude+BETWEEN+${sliderMin}+AND+${sliderMax} AND BBOX(isisfootprint, + ${extent.join(',')})`;
+        },
+        strategy: ol.loadingstrategy.bbox,
+        wrapX: false,
+      });
+      var ctxOverlay = new ol.layer.Vector({
+        title: 'WFS',
+        source: ctxSource,
+        style: new ol.style.Style({
+          fill: new ol.style.Fill({
+           color: "rgba(0, 0, 255, .25)"
+          }),
+          stroke: new ol.style.Stroke({
+            color: 'rgba(0, 0, 255, 1.0)',
+            width: 2
+          })
+        })
+      });
+      overlays.push(ctxOverlay);
+      this.footprintLayers.push(ctxOverlay);
+
+      var themisSource = new ol.source.Vector({
+        format: new ol.format.GeoJSON(),
+        url: function(extent) { 
+          return "https://astro-geoserver.wr.usgs.gov/geoserver/upc/ows?service=WFS&version=1.0.0"
+                 + "&request=GetFeature&typeName=upc%3Athemis_mars&outputFormat=application%2Fjson&maxFeatures=50"
+                 + "&bbox=" + extent.join(',') + ',' + thisContext.projection;
+        },
+        strategy: ol.loadingstrategy.bbox,
+        wrapX: false,
+      });
+      var themisOverlay = new ol.layer.Vector({
+        title: 'WFS',
+        source: themisSource,
+        style: new ol.style.Style({
+          fill: new ol.style.Fill({
+           color: "rgba(255, 0, 0, .25)"
+          }),
+          stroke: new ol.style.Stroke({
+            color: 'rgba(255, 0, 0, 1.0)',
+            width: 2
+          })
+        })
+      });
+      overlays.push(themisOverlay);
+      this.footprintLayers.push(themisOverlay);
+
+
+      document.getElementById("solarLongMin").addEventListener("input", function() {
+        var sliderMin = document.getElementById("solarLongMin").value;
+        var sliderMax = document.getElementById("solarLongMax").value;
+
+        ctxSource = new ol.source.Vector({
           format: new ol.format.GeoJSON(),
           url: function(extent) { 
-            return 'https://astrocloud.wr.usgs.gov/dataset/data/nomenclature/' +
-            thisContext.target.toUpperCase() + '/WFS?service=WFS&version=1.1.0&request=GetFeature&' +
-            'outputFormat=application/json&srsname=' + thisContext.projection + '&' +
-            'bbox=' + extent.join(',') + ',' + thisContext.projection;
+            return "https://astro-geoserver.wr.usgs.gov/geoserver/upc/ows?service=WFS&version=1.0.0&srs=EPSG%3A4326"
+                   + "&request=GetFeature&typeName=upc%3Actx_mars&outputFormat=application%2Fjson&maxFeatures=200"
+                   + `&CQL_FILTER=solarlongitude+BETWEEN+${sliderMin}+AND+${sliderMax} AND BBOX(isisfootprint, + ${extent.join(',')})`;
           },
-          serverType: 'geoserver',
-          crossOrigin: 'anonymous',
-          strategy: ol.loadingstrategy.bbox
+          strategy: ol.loadingstrategy.bbox,
+          wrapX: false,
         });
-        var wfsOverlay = new ol.layer.Vector({
-          title: 'WFS',
-          source: wfsSource,
-          style: new ol.style.Style({
-            stroke: new ol.style.Stroke({
-              color: 'rgba(0, 0, 255, 1.0)',
-              width: 2
-            })
-          })
+        ctxOverlay.setSource(ctxSource);
+      });
+      document.getElementById("solarLongMax").addEventListener("input", function() {
+        var sliderMin = document.getElementById("solarLongMin").value;
+        var sliderMax = document.getElementById("solarLongMax").value;
+
+        ctxSource = new ol.source.Vector({
+          format: new ol.format.GeoJSON(),
+          url: function(extent) { 
+            return "https://astro-geoserver.wr.usgs.gov/geoserver/upc/ows?service=WFS&version=1.0.0&srs=EPSG%3A4326"
+                   + "&request=GetFeature&typeName=upc%3Actx_mars&outputFormat=application%2Fjson&maxFeatures=200"
+                   + `&CQL_FILTER=solarlongitude+BETWEEN+${sliderMin}+AND+${sliderMax} AND BBOX(isisfootprint, + ${extent.join(',')})`;
+          },
+          strategy: ol.loadingstrategy.bbox,
+          wrapX: false,
         });
-        overlays.push(wfsOverlay);
-      }
+        ctxOverlay.setSource(ctxSource);
+      });
     }  
 
     var baseLayerGroup = new ol.layer.Group({

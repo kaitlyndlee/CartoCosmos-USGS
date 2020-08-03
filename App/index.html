@@ -19,7 +19,7 @@
 
     <style>
       .map {
-        height: 800px;
+        height: 100%;
         width: 100%;
         border: solid;
       }
@@ -30,7 +30,7 @@
       }
 
       .MapOptions {
-        width: 8%;
+        /*width: 8%;*/
         margin-top: 1%;
         background-color: #d9d9d9;
         float: left;
@@ -38,12 +38,12 @@
       }
 
       .DrawOptions {
-        margin-left: 0px;
-        margin-right: 55%;
+        /*margin-left: 0px;*/
+        /*margin-right: 55%;*/
         margin-top: 1%;
-        width: 34%;
+        /*width: 34%;*/
         background-color: #d9d9d9;
-        float: right;
+        /*float: right;*/
         border: solid;
       }
 
@@ -106,6 +106,13 @@
     <div id="draw-controls" class="DrawOptions">
       <h4 style="margin:0;">Draw Controls</h4>
       <ul id="draw-controls"></ul>
+    </div>
+    <br><br><br>
+    <div id="SliderOptions">
+      <h4> Solar Longitude Min</h4>
+      <input type="range" min="1" max="200" value="1" class="slider" id="solarLongMin">
+      <h4> Solar Longitude Max</h4>
+      <input type="range" min="1" max="200" value="100" class="slider" id="solarLongMax">
     </div>
     <script src="js/planetary/mapInstance.js"></script>
   </body>
