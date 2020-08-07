@@ -53,7 +53,7 @@ class PlanetaryMap {
     var view = new ol.View({
       projection: this.projection,
       center: [0, 0],
-      zoom: 2,
+      zoom: 6,
       minZoom:2,
       maxZoom:10
     });
@@ -172,7 +172,7 @@ class PlanetaryMap {
     this.map.addInteraction(select);
     var selectedFeatures = select.getFeatures();
     selectedFeatures.on('add', function(event) {
-      console.log(event.element.values_.solarlongitude);
+      console.log(event.element.values_);
     });
 
     this.map.addControl(mousePositionControl);
@@ -418,12 +418,14 @@ class PlanetaryMap {
       //   });
       //   overlays.push(vector);
 
+      var ctxSourceURL = "https://astro-geoserver.wr.usgs.gov/geoserver/upc/ows?service=WFS&version=1.0.0&srs=EPSG%3A4326"
+                       + "&request=GetFeature&typeName=upc:mars_ctx&outputFormat=application%2Fjson&maxFeatures=200";
+
       // Loading the CTX and THEMIS footprints as WFS layers
       var ctxSource = new ol.source.Vector({
         format: new ol.format.GeoJSON(),
         url: function(extent) { 
-          return "https://astro-geoserver.wr.usgs.gov/geoserver/upc/ows?service=WFS&version=1.0.0&srs=EPSG%3A4326"
-                 + "&request=GetFeature&typeName=upc:mars_ctx&outputFormat=application%2Fjson&maxFeatures=200"
+          return ctxSourceURL
                  + `&CQL_FILTER=solarlongitude+BETWEEN+${sliderMin}+AND+${sliderMax} AND BBOX(isisfootprint, + ${extent.join(',')})`;
         },
         strategy: ol.loadingstrategy.bbox,
@@ -480,8 +482,7 @@ class PlanetaryMap {
         ctxSource = new ol.source.Vector({
           format: new ol.format.GeoJSON(),
           url: function(extent) { 
-            return "https://astro-geoserver.wr.usgs.gov/geoserver/upc/ows?service=WFS&version=1.0.0&srs=EPSG%3A4326"
-                   + "&request=GetFeature&typeName=upc%3Amars_ctx&outputFormat=application%2Fjson&maxFeatures=1000"
+            return ctxSourceURL
                    + `&CQL_FILTER=solarlongitude+BETWEEN+${sliderMin}+AND+${sliderMax} AND BBOX(isisfootprint, + ${extent.join(',')})`;
           },
           strategy: ol.loadingstrategy.bbox,
@@ -496,8 +497,7 @@ class PlanetaryMap {
         ctxSource = new ol.source.Vector({
           format: new ol.format.GeoJSON(),
           url: function(extent) { 
-            return "https://astro-geoserver.wr.usgs.gov/geoserver/upc/ows?service=WFS&version=1.0.0&srs=EPSG%3A4326"
-                   + "&request=GetFeature&typeName=upc%3Amars_ctx&outputFormat=application%2Fjson&maxFeatures=1000"
+            return ctxSourceURL
                    + `&CQL_FILTER=solarlongitude+BETWEEN+${sliderMin}+AND+${sliderMax} AND BBOX(isisfootprint, + ${extent.join(',')})`;
           },
           strategy: ol.loadingstrategy.bbox,
